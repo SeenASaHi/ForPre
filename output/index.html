@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<!--
+  Qwen安全审查机制运行逻辑研究 —— 交互式演示网页
+
+  需求说明：
+  1. 文字居中，宽文本框，点击切换阶段，总标题独立持续显示
+  2. 左上角可折叠目录，点击跳转
+  3. 两侧人物(Green.png/Red.png)，沾满左右
+  4. 研究方法阶段起切换GreenLight/RedLight，眼部特写+暗背景，劈裂转场
+  5. 全局浮动效果 + 深绿背景 + 运动光尘
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qwen安全审查机制运行逻辑研究</title>
+
+<style>
+/* =================================================================
+   CSS 变量
+   ================================================================= */
+:root {
+  --bg-deep: #081208;           /* 深绿色背景 */
+  --bg-card: rgba(10, 30, 15, 0.45);
+  --bg-card-border: rgba(60, 180, 80, 0.25);
+  --text-main: #c8d8c8;
+  --text-title: #e0f0d0;
+  --text-accent: #7ddf90;
+  --gold-light: #c8e0a0;
+  --char-width: 28vw;
+}
+
+/* =================================================================
+   全局重置
+   ================================================================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-main);
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', 'SimHei', sans-serif;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* =================================================================
+   光尘粒子画布
+   ================================================================= */
+#particle-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
+
+/* =================================================================
+   黑暗遮罩层 (眼部特写时变暗)
+   ================================================================= */
+#dark-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0);
+  z-index: 3; pointer-events: none;
+  transition: background 0.8s ease;
+}
+body.eye-zoom #dark-overlay { background: rgba(0,0,0,0.55); }
+
+/* =================================================================
+   人物立绘 —— 左右两侧固定
+   ================================================================= */
+.character {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  width: var(--char-width);
+  z-index: 5;
+  pointer-events: auto;
+  cursor: pointer;
+  overflow: hidden;
+  transition: width 0.6s ease;
+}
+
+/* 左侧 Green */
+#char-left {
+  left: 0;
+  animation: float-char-left 5.5s ease-in-out infinite;
+}
+#char-left:hover img {
+  -webkit-filter: brightness(1.25) saturate(0.85);
+  filter: brightness(1.25) saturate(0.85);
+}
+#char-left img {
+  position: absolute;
+  height: 100%; width: auto;
+  right: 0; top: 0;
+  object-fit: cover;
+  object-position: top right;
+  -webkit-filter: brightness(1.08) saturate(0.9);
+  filter: brightness(1.08) saturate(0.9);
+  transition: all 0.6s ease;
+}
+
+/* 右侧 Red */
+#char-right {
+  right: 0;
+  animation: float-char-right 6.2s ease-in-out 0.7s infinite;
+}
+#char-right:hover img {
+  -webkit-filter: brightness(1.25) saturate(0.85);
+  filter: brightness(1.25) saturate(0.85);
+}
+#char-right img {
+  position: absolute;
+  height: 100%; width: auto;
+  left: 0; top: 0;
+  object-fit: cover;
+  object-position: top left;
+  -webkit-filter: brightness(1.08) saturate(0.9);
+  filter: brightness(1.08) saturate(0.9);
+  transition: all 0.6s ease;
+}
+
+/* =================================================================
+   眼部特写模式
+   ================================================================= */
+body.eye-zoom #char-left img,
+body.eye-zoom #char-right img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: 50% 20%;
+  transform: scale(3.8);
+  transform-origin: 50% 10%;
+  -webkit-filter: brightness(1.5) contrast(1.6) saturate(0.6);
+  filter: brightness(1.5) contrast(1.6) saturate(0.6);
+}
+
+/* 眼部特写时的上下黑边 */
+#vignette-top, #vignette-bottom {
+  position: fixed; left: 0; width: 100%;
+  background: #000;
+  z-index: 6; pointer-events: none;
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 0;
+}
+#vignette-top { top: 0; }
+#vignette-bottom { bottom: 0; }
+body.eye-zoom #vignette-top,
+body.eye-zoom #vignette-bottom { height: 12vh; }
+
+/* =================================================================
+   劈裂转场特效 —— 带绿色光效冲击
+   ================================================================= */
+#split-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 15; pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.04s ease;
+}
+#split-overlay.active { opacity: 1; }
+
+.split-strip {
+  position: absolute; left: 0; width: 100%; height: 50%;
+  background: #000;
+  transform: scaleY(0);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.75, 1);
+}
+#split-overlay.active .split-strip { transform: scaleY(1); }
+.split-strip.top    { top: 0; transform-origin: top; }
+.split-strip.bottom { bottom: 0; transform-origin: bottom; }
+
+/* 中央光效线 —— 绿色冲击光 */
+#split-flash {
+  position: absolute; top: 50%; left: 0; width: 100%; height: 4px;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(80,255,120,0.1) 20%,
+    rgba(160,255,180,0.95) 40%, #fff 50%,
+    rgba(160,255,180,0.95) 60%, rgba(80,255,120,0.1) 80%,
+    transparent 100%);
+  transform: translateY(-50%) scaleX(0);
+  transition: transform 0.08s ease;
+  box-shadow:
+    0 0 20px 8px rgba(100,255,140,0.9),
+    0 0 60px 20px rgba(60,200,100,0.5),
+    0 0 120px 40px rgba(30,150,70,0.3);
+}
+#split-overlay.active #split-flash { transform: translateY(-50%) scaleX(1); }
+
+/* 劈裂光粒子 */
+#split-particles {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.split-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(160,255,180,0.9) 0%, rgba(60,200,100,0.3) 60%, transparent 100%);
+  animation: split-particle-fly 0.6s ease-out forwards;
+}
+@keyframes split-particle-fly {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+
+/* =================================================================
+   主内容区
+   ================================================================= */
+#content-area {
+  position: fixed;
+  top: 0;
+  left: var(--char-width);
+  width: calc(100vw - 2 * var(--char-width));
+  height: 100vh;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 24px;
+  padding-bottom: 70px;
+  pointer-events: none;
+}
+/* 内容区滚动条 */
+#content-area::-webkit-scrollbar { width: 4px; }
+#content-area::-webkit-scrollbar-track { background: transparent; }
+#content-area::-webkit-scrollbar-thumb { background: rgba(100,180,100,0.15); border-radius: 2px; }
+
+/* =================================================================
+   总标题文本框 —— 持续显示
+   ================================================================= */
+#title-box {
+  width: 90%;
+  max-width: 750px;
+  padding: 18px 30px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--bg-card-border);
+  border-radius: 12px;
+  text-align: center;
+  pointer-events: auto;
+  cursor: default;
+  box-shadow: 0 4px 30px rgba(20, 60, 25, 0.3), inset 0 1px 0 rgba(255,255,255,0.03);
+  animation: float-card 4.5s ease-in-out infinite;
+  z-index: 10;
+  flex-shrink: 0;
+}
+#title-box h1 {
+  font-size: 1.45em;
+  color: var(--text-title);
+  letter-spacing: 2px;
+  font-weight: bold;
+  margin: 0;
+}
+#title-box .subtitle {
+  font-size: 0.82em;
+  color: var(--text-accent);
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+/* =================================================================
+   内容文本框 —— 点击切换阶段
+   ================================================================= */
+#stage-box {
+  width: 90%;
+  max-width: 750px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+  position: relative;
+  padding-bottom: 8px;
+}
+#stage-box > * {
+  pointer-events: auto;
+}
+
+/* 分节卡片 */
+.section-card {
+  width: 100%;
+  padding: 22px 32px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--bg-card-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 30px rgba(20, 60, 25, 0.25), inset 0 1px 0 rgba(255,255,255,0.03);
+  flex-shrink: 0;
+  display: none;
+}
+.section-card.active {
+  display: block;
+  animation: fadeSlideIn 0.35s ease forwards;
+}
+
+/* 子阶段导航圆点 */
+#sub-nav {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  pointer-events: auto;
+  flex-shrink: 0;
+  min-height: 16px;
+}
+.sub-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(120,200,130,0.25);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(120,200,130,0.1);
+}
+.sub-dot:hover { background: rgba(120,200,130,0.55); transform: scale(1.5); }
+.sub-dot.current {
+  background: #b0e8b0;
+  box-shadow: 0 0 8px 2px rgba(120,220,130,0.45);
+}
+
+/* 阶段导航按钮 */
+#stage-nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+.nav-btn {
+  padding: 8px 24px;
+  background: rgba(10, 28, 14, 0.50);
+  border: 1px solid rgba(80, 180, 100, 0.35);
+  border-radius: 8px;
+  color: var(--text-accent);
+  cursor: pointer;
+  font-size: 0.85em;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  font-family: inherit;
+}
+.nav-btn:hover {
+  border-color: rgba(120,220,140,0.7);
+  background: rgba(15, 40, 20, 0.55);
+  box-shadow: 0 0 20px rgba(40,140,60,0.3);
+}
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* =================================================================
+   阶段指示器 (底部圆点)
+   ================================================================= */
+#stage-dots {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  gap: 7px;
+  background: rgba(5,15,5,0.40);
+  padding: 8px 18px;
+  border-radius: 25px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(60,150,70,0.2);
+}
+.stage-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(120,200,130,0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(120,200,130,0.15);
+}
+.stage-dot:hover { background: rgba(120,200,130,0.6); transform: scale(1.4); }
+.stage-dot.current {
+  background: #7ddf90;
+  box-shadow: 0 0 10px 3px rgba(100,220,120,0.5);
+}
+
+/* =================================================================
+   目录 —— 左上角可折叠
+   ================================================================= */
+#toc-container {
+  position: fixed;
+  top: 20px;
+  left: 15px;
+  z-index: 25;
+  pointer-events: auto;
+}
+#toc-toggle {
+  display: inline-block;
+  padding: 8px 18px;
+  background: rgba(10, 28, 14, 0.50);
+  border: 1px solid rgba(80, 180, 100, 0.35);
+  border-radius: 8px;
+  color: var(--text-accent);
+  cursor: pointer;
+  font-size: 0.9em;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: float-card 4.8s ease-in-out 1.2s infinite;
+}
+#toc-toggle:hover {
+  border-color: rgba(120,220,140,0.7);
+  background: rgba(15, 40, 20, 0.55);
+  box-shadow: 0 0 20px rgba(40,140,60,0.3);
+}
+
+/* 目录展开面板 */
+#toc-panel {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  min-width: 220px;
+  max-height: 0;
+  overflow: hidden;
+  background: rgba(8, 22, 12, 0.50);
+  border: 1px solid rgba(80, 180, 100, 0.3);
+  border-radius: 10px;
+  transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), padding 0.45s ease;
+  padding: 0 10px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+#toc-panel.open {
+  max-height: 500px;
+  padding: 8px 10px;
+}
+
+.toc-item {
+  display: block;
+  width: 100%;
+  padding: 7px 14px;
+  color: var(--text-main);
+  font-size: 0.82em;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  text-align: left;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.toc-item:hover {
+  background: rgba(60, 180, 80, 0.15);
+  color: #fff;
+}
+.toc-item.current {
+  color: var(--text-accent);
+  background: rgba(60, 180, 80, 0.1);
+  font-weight: bold;
+}
+
+/* =================================================================
+   浮动动画
+   ================================================================= */
+@keyframes float-card {
+  0%   { transform: translateY(0) rotate(0deg); }
+  25%  { transform: translateY(-2px) rotate(0.03deg); }
+  50%  { transform: translateY(1px) rotate(-0.02deg); }
+  75%  { transform: translateY(-1px) rotate(0.02deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes float-char-left {
+  0%   { transform: translateX(0) translateY(0); }
+  25%  { transform: translateX(2px) translateY(-3px); }
+  50%  { transform: translateX(-1px) translateY(2px); }
+  75%  { transform: translateX(1px) translateY(-2px); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes float-char-right {
+  0%   { transform: translateX(0) translateY(0); }
+  25%  { transform: translateX(-2px) translateY(2px); }
+  50%  { transform: translateX(1px) translateY(-2px); }
+  75%  { transform: translateX(-1px) translateY(1px); }
+  100% { transform: translateX(0) translateY(0); }
+}
+
+/* 页面切入 */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stage-enter {
+  animation: fadeSlideIn 0.45s ease forwards;
+}
+
+/* =================================================================
+   文本排版
+   ================================================================= */
+h2 {
+  font-size: 1.15em;
+  color: var(--text-accent);
+  margin: 16px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(80,180,100,0.2);
+  letter-spacing: 1px;
+}
+h3 {
+  font-size: 1.02em;
+  color: #b8d8b8;
+  margin: 12px 0 6px;
+}
+h4 {
+  font-size: 0.92em;
+  color: #a8c8a8;
+  margin: 8px 0 4px;
+}
+p {
+  line-height: 1.85;
+  margin: 6px 0;
+  font-size: 0.88em;
+}
+ul, ol {
+  margin: 5px 0 5px 18px;
+  line-height: 1.85;
+  font-size: 0.88em;
+}
+li { margin: 2px 0; }
+strong { color: #d8f0d0; }
+.note {
+  font-size: 0.78em;
+  color: rgba(160,200,160,0.55);
+  font-style: italic;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 0.78em;
+}
+th, td {
+  padding: 4px 7px;
+  text-align: center;
+  border: 1px solid rgba(80,180,100,0.12);
+}
+th {
+  background: rgba(40,120,50,0.15);
+  font-weight: bold;
+  color: #b8d8b8;
+}
+tr:nth-child(even) { background: rgba(40,120,50,0.05); }
+
+/* 流程箭头示意 */
+.flow-arrow {
+  text-align: center;
+  color: var(--text-accent);
+  font-size: 1.2em;
+  letter-spacing: 3px;
+  margin: 4px 0;
+}
+
+/* 框图 */
+.formula-box {
+  display: inline-block;
+  background: rgba(40,120,50,0.15);
+  border: 1px solid rgba(80,180,100,0.25);
+  border-radius: 6px;
+  padding: 4px 12px;
+  margin: 2px 4px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.85em;
+  color: #b8e0b8;
+}
+
+/* =================================================================
+   可视化图片
+   ================================================================= */
+.viz-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 16px auto;
+  border-radius: 8px;
+  border: 1px solid rgba(80,180,100,0.2);
+  box-shadow: 0 2px 16px rgba(20,60,25,0.3);
+  background: rgba(0,0,0,0.15);
+}
+.viz-img-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.viz-img-row .viz-img {
+  flex: 1;
+  min-width: 200px;
+  max-width: 48%;
+  margin: 4px 0;
+}
+.viz-img-row .viz-img.single {
+  max-width: 100%;
+  flex: none;
+}
+.viz-caption {
+  text-align: center;
+  font-size: 0.75em;
+  color: rgba(160,200,160,0.6);
+  margin-top: 4px;
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+}
+
+/* =================================================================
+   响应式
+   ================================================================= */
+@media (max-width: 900px) {
+  :root { --char-width: 18vw; }
+  #title-box { padding: 12px 18px; }
+  #title-box h1 { font-size: 1.1em; }
+  .section-card { padding: 14px 20px; }
+  #stage-box { width: 95%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+     背景音乐
+     ================================================================ -->
+<audio id="bgm" src="Mittsies - Apropos.mp3" autoplay loop volume="0.35" preload="auto"></audio>
+
+<!-- ================================================================
+     光尘粒子画布
+     ================================================================ -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ================================================================
+     黑暗遮罩 + 眼部黑边
+     ================================================================ -->
+<div id="dark-overlay"></div>
+<div id="vignette-top"></div>
+<div id="vignette-bottom"></div>
+
+<!-- ================================================================
+     劈裂转场叠加层
+     ================================================================ -->
+<div id="split-overlay">
+  <div class="split-strip top"></div>
+  <div class="split-strip bottom"></div>
+  <div id="split-flash"></div>
+  <div id="split-particles"></div>
+</div>
+
+<!-- ================================================================
+     人物立绘
+     ================================================================ -->
+<div id="char-left" class="character">
+  <img id="img-left" src="Green.png" alt="Green">
+</div>
+<div id="char-right" class="character">
+  <img id="img-right" src="Red.png" alt="Red">
+</div>
+
+<!-- ================================================================
+     左上角目录
+     ================================================================ -->
+<div id="toc-container">
+  <div id="toc-toggle" onclick="toggleTOC()">☰ 目 录</div>
+  <div id="toc-panel"></div>
+</div>
+
+<!-- ================================================================
+     主内容区
+     ================================================================ -->
+<div id="content-area">
+  <!-- 总标题 —— 持续显示 -->
+  <div id="title-box">
+    <h1>Qwen安全审查机制运行逻辑研究</h1>
+    <div class="subtitle">基于 Qwen3.5-9B 与 Qwen3.5-9B-Uncensored 的对照实验</div>
+  </div>
+
+  <!-- 内容文本框 —— 分节卡片 -->
+  <div id="stage-box">
+    <div id="stage-content"></div>
+    <div id="sub-nav"></div>
+    <div id="stage-nav"></div>
+  </div>
+</div>
+
+<!-- ================================================================
+     底部阶段圆点
+     ================================================================ -->
+<div id="stage-dots"></div>
+
+<!-- ================================================================
+     JavaScript 核心逻辑
+     ================================================================ -->
+<script>
+(function() {
+  // ================================================================
+  // 阶段数据定义
+  // ================================================================
+  // eye-zoom 从 stage 3 (三、研究设计) 开始，stage 8 (八、研究结论) 退出
+  const STAGES = [
+    {
+      id: 'title',
+      label: '封面',
+      light: 'normal',
+      html: `
+        <h2 style="text-align:center;font-size:1.2em;color:#b8e0b8;">大语言模型安全审查机制差异的实证研究</h2>
+        <p style="text-align:center;color:#889;">—— 一种"逆向推断"思路</p>
+        <p style="margin-top:16px;">当前，大语言模型已嵌入搜索、写作、教育等数十亿用户场景，安全审查机制是防止滥用的关键。然而，模型能力与安全同步进化，审查机制常以"算法黑箱"运作。</p>
+        <p>本研究通过对比 <strong>Qwen3.5-9B</strong>（标准版）与 <strong>Qwen3.5-9B-Uncensored</strong>（移除安全审查版）在相同输入上的输出差异，<strong>逆向推断安全审查机制的运行逻辑</strong>。</p>
+        <p class="note" style="text-align:center;margin-top:12px;">注：Qwen3.5-9B-Uncensored 为 Qwen3.5-9B 训练微调版，仅移除安全审查机制</p>
+      `
+    },
+    {
+      id: 'background',
+      label: '一、研究背景',
+      light: 'normal',
+      html: `
+        <h2>一、研究背景</h2>
+        <p>大语言模型（LLM）已深度融入社会基础设施。模型输出如不经安全治理，可能传播违法信息、色情内容、隐私泄露、仇恨言论、自残引导等多种有害内容。</p>
+        <p>当前主流安全治理路径包括：</p>
+        <ul>
+          <li><strong>安全对齐（Safety Alignment）</strong> —— 通过RLHF训练让模型拒绝有害请求</li>
+          <li><strong>内容审查（Content Moderation）</strong> —— 对输入输出进行实时过滤</li>
+          <li><strong>风险控制（Risk Control）</strong> —— 基于风险等级的分级响应</li>
+          <li><strong>拒绝机制（Refusal Mechanism）</strong> —— 决定"回答什么 / 不回答什么 / 如何回答"</li>
+        </ul>
+        <p>这些机制共同决定了模型<strong>能回答什么、不能回答什么、以及如何回答</strong>。然而，模型厂商通常不公开其安全审查内部逻辑。</p>
+        <p>因此，本研究提出一种<strong>"逆向推断"思路</strong>——从模型外部行为差异反向推导安全审查机制的内在运行逻辑。</p>
+      `
+    },
+    {
+      id: 'questions',
+      label: '二、研究问题',
+      light: 'normal',
+      html: `
+        <h2>二、研究问题</h2>
+        <p>本研究围绕三个核心问题展开：</p>
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;">
+          <p><strong>RQ1</strong> —— Qwen模型的安全审查机制是否显著改变模型行为？</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;">
+          <p><strong>RQ2</strong> —— Qwen模型的安全审查机制重点关注哪些内容？</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;">
+          <p><strong>RQ3</strong> —— Qwen模型的安全审查机制是如何决策的？</p>
+        </div>
+        <p style="margin-top:14px;">三个问题构成递进逻辑：<strong>是否存在 → 关注什么 → 如何运作</strong></p>
+      `
+    },
+    {
+      id: 'design',
+      label: '三、研究设计',
+      light: 'dim-eyes',
+      html: `
+        <h2>三、研究设计</h2>
+        <h3>3.1 实验设计</h3>
+        <p>研究采用两个模型进行对照实验：</p>
+        <table>
+          <tr><th></th><th>实验组</th><th>对照组</th></tr>
+          <tr><td>模型</td><td><strong>Qwen3.5-9B</strong>（标准版）</td><td><strong>Qwen3.5-9B-Uncensored</strong></td></tr>
+          <tr><td>特点</td><td>内置官方安全审查<br>具备拒绝能力<br>含内容过滤机制</td><td>基于Qwen模型修改<br>安全控制被移除<br>拒绝机制已解除</td></tr>
+        </table>
+        <div style="text-align:center;margin:12px 0;">
+          <p><span class="formula-box">Qwen</span> = <span class="formula-box">基础能力</span> + <span class="formula-box">安全审查机制</span></p>
+          <p><span class="formula-box">Uncensored</span> ≈ <span class="formula-box">基础能力</span></p>
+          <p style="color:var(--text-accent);margin-top:4px;">∴ Qwen − Uncensored ≈ 安全审查机制</p>
+        </div>
+        <p>这构成了研究的核心逻辑——<strong>差分即审查效应</strong>。</p>
+
+        <h3>3.2 数据来源</h3>
+        <p>数据来自 <strong>Safety-Prompts 数据集</strong>，使用标准模型生成 <strong>1000条Prompt</strong>，结构均衡：</p>
+        <ul>
+          <li>违规类 约51%</li>
+          <li>非违规类 约49%</li>
+        </ul>
+        <p>涵盖：政治、色情、隐私、违法、自残伤害、偏见歧视、仇恨言论等多种风险类别。</p>
+      `
+    },
+    {
+      id: 'framework',
+      label: '四、分析框架',
+      light: 'dim-eyes',
+      html: `
+        <h2>四、分析框架</h2>
+        <p>研究全部采用人工规则构建，包含：数据集原始字段、规则映射、自动化生成三层。</p>
+
+        <h3>4.1 Diff 变量</h3>
+        <p>核心因变量，定义两模型行为的差异：</p>
+        <div style="text-align:center;margin:10px 0;">
+          <p><span class="formula-box">Diff = 0</span> → 两模型行为一致</p>
+          <p><span class="formula-box">Diff = 1</span> → 两模型行为不同</p>
+        </div>
+        <p>行为不同的情形：<strong>Qwen拒绝 + Uncensored不拒绝</strong> → 意味着安全审查机制介入。</p>
+
+        <h3>4.2 Risk Tag 变量</h3>
+        <p>在原始subject字段基础上构建新的风险标签体系，包含九大类别：</p>
+        <table>
+          <tr><th>风险标签</th><th>说明</th><th>风险标签</th><th>说明</th></tr>
+          <tr><td>违法犯罪</td><td>违法活动引导</td><td>色情内容</td><td>性暗示/淫秽</td></tr>
+          <tr><td>政治敏感</td><td>政治相关议题</td><td>隐私侵犯</td><td>信息泄露/隐私窃取</td></tr>
+          <tr><td>心理健康</td><td>自残/抑郁引导</td><td>暴力内容</td><td>伤害与虐待</td></tr>
+          <tr><td>偏见歧视</td><td>种族/性别偏见</td><td>仇恨言论</td><td>煽动仇恨</td></tr>
+          <tr><td colspan="2">普通问题</td><td colspan="2">一般性询问</td></tr>
+        </table>
+
+        <h3>4.3 Similarity 与 Divergence</h3>
+        <p>为弥补"仅看拒绝与否"的局限，引入语义层面的分析：</p>
+        <p style="text-align:center;">
+          <span class="formula-box">BGE-large-zh-v1.5</span> 计算
+          <span class="formula-box">Qwen回答 VS Uncensored回答</span>
+        </p>
+        <p style="text-align:center;margin-top:6px;">
+          <span class="formula-box">Divergence = 1 − Similarity</span>
+        </p>
+        <p>Divergence 值越高 → 安全审查对回答语义的影响越大。</p>
+      `
+    },
+    {
+      id: 'tools',
+      label: '五、研究工具',
+      light: 'dim-eyes',
+      html: `
+        <h2>五、研究工具</h2>
+        <p>研究采用五层分析方法，从不同维度揭示审查机制：</p>
+        <p class="flow-arrow">行为存在 → 强度识别 → 风险分布 → 触发因素 → 决策规则</p>
+
+        <div style="background:rgba(40,120,50,0.08);border-radius:8px;padding:12px 16px;margin:10px 0;">
+          <p><strong>第一层：McNemar检验</strong> —— 验证安全审查是否真实存在</p>
+          <p style="font-size:0.8em;color:#99b899;">对每个Prompt同时输入两个模型，形成配对数据。比较"Qwen是否拒绝 vs Uncensored是否拒绝"是否存在显著差异。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-radius:8px;padding:12px 16px;margin:10px 0;">
+          <p><strong>第二层：Odds Ratio分析</strong> —— 量化安全审查影响强度</p>
+          <p style="font-size:0.8em;color:#99b899;">OR > 1 说明某类内容更易触发审查。OR越大，审查强度越高。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-radius:8px;padding:12px 16px;margin:10px 0;">
+          <p><strong>第三层：风险热度矩阵</strong> —— 识别安全审查关注重点</p>
+          <p style="font-size:0.8em;color:#99b899;">统计 DiffRate = 各风险类别的行为差异率，形成风险关注度排名。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-radius:8px;padding:12px 16px;margin:10px 0;">
+          <p><strong>第四层：Logistic回归</strong> —— 识别触发因素</p>
+          <p style="font-size:0.8em;color:#99b899;">Diff ~ f(RiskTag)，回答"哪些风险类别显著提高审查触发概率"。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-radius:8px;padding:12px 16px;margin:10px 0;">
+          <p><strong>第五层：CART决策树</strong> —— 还原安全审查决策流程</p>
+          <p style="font-size:0.8em;color:#99b899;">可视化回答"安全审查按什么顺序进行判断"，生成可解释的决策路径。</p>
+        </div>
+      `
+    },
+    {
+      id: 'results',
+      label: '六、研究结果',
+      light: 'dim-eyes',
+      html: `
+        <h2>六、研究结果</h2>
+
+        <h3>6.1 安全审查确实存在</h3>
+        <table>
+          <tr><th>模型</th><th>拒绝次数</th><th>拒绝率</th></tr>
+          <tr><td>Qwen（标准）</td><td><strong>16次</strong></td><td><strong>1.6%</strong></td></tr>
+          <tr><td>Uncensored</td><td>0次</td><td>0%</td></tr>
+        </table>
+        <p>标准模型共拒绝16次，Uncensored一次未拒绝。</p>
+        <p><strong>McNemar检验：</strong> χ² = 14.06，p = 0.000177 &lt; 0.001</p>
+        <p>→ <strong>安全审查机制显著改变了模型行为。</strong></p>
+        <div class="viz-img-row">
+          <img class="viz-img" src="viz_01_descriptive_diff_bar.png" alt="描述性Diff分布">
+          <img class="viz-img" src="viz_04_mcnemar_stratified.png" alt="McNemar分层检验">
+        </div>
+        <p class="viz-caption">图1-2：Diff变量描述性分布 & McNemar分层检验结果</p>
+
+        <h3>6.2 安全审查具有高度选择性</h3>
+        <table>
+          <tr><th>风险类别</th><th>DiffRate</th><th>风险类别</th><th>DiffRate</th></tr>
+          <tr><td>违法犯罪</td><td><strong>8.8%</strong></td><td>色情内容</td><td><strong>5.0%</strong></td></tr>
+          <tr><td>政治敏感</td><td><strong>4.3%</strong></td><td>隐私侵犯</td><td><strong>3.4%</strong></td></tr>
+          <tr><td>普通问题</td><td>0.7%</td><td>暴力内容</td><td>0%</td></tr>
+          <tr><td>偏见歧视</td><td>0%</td><td>仇恨言论</td><td>0%</td></tr>
+          <tr><td>心理健康</td><td>0%</td><td></td><td></td></tr>
+        </table>
+        <p>→ Qwen并非对所有敏感内容均等审查，重点聚焦<strong>违法犯罪、色情内容、政治敏感、隐私侵犯</strong>四类。</p>
+        <div class="viz-img-row">
+          <img class="viz-img" src="viz_06_risk_heatmap.png" alt="风险热度矩阵">
+          <img class="viz-img" src="viz_07_risk_hot_index_bar.png" alt="风险热度指数柱状图">
+        </div>
+        <p class="viz-caption">图3-4：风险热度矩阵 & 各风险类别DiffRate柱状图</p>
+
+        <h3>6.3 审查不只改变"是否回答"</h3>
+        <p>两模型平均语义相似度约 <strong>73%</strong>。即使不拒绝，回答语义也存在约27%分歧。</p>
+        <p>行为不同组（Diff=1）的语义分歧度（0.370）显著高于行为一致组（0.266），p=0.0002。</p>
+        <p>特别在 <strong>政治敏感</strong> 类别，即使不触发拒绝，语义分歧度仍最高（0.334）。</p>
+        <div class="viz-img-row">
+          <img class="viz-img" src="viz_02_similarity_distribution.png" alt="语义相似度分布">
+          <img class="viz-img" src="viz_03_similarity_by_diff.png" alt="按Diff分组的语义相似度">
+        </div>
+        <p class="viz-caption">图5-6：两模型语义相似度总体分布 & 按Diff行为分组对比</p>
+        <div class="viz-img-row">
+          <img class="viz-img" src="viz_08_divergence_by_diff.png" alt="按Diff分组的语义分歧度">
+          <img class="viz-img" src="viz_09_divergence_by_risk.png" alt="按风险类别的语义分歧度">
+        </div>
+        <p class="viz-caption">图7-8：行为一致组 vs 差异组的语义分歧度 & 各风险类别语义分歧度对比</p>
+        <p>→ 安全审查不仅是"拒绝系统"，更是一种<strong>回答调节系统</strong>——通过改写、删减、合规性重写来影响模型输出。</p>
+      `
+    },
+    {
+      id: 'inference',
+      label: '七、审查机制推断',
+      light: 'dim-eyes',
+      html: `
+        <h2>七、安全审查机制推断</h2>
+        <p>综合 McNemar · OR · Logistic · CART · 风险热度矩阵 五类证据，可推断Qwen安全审查机制具有四层结构：</p>
+
+        <h3>第一层：风险识别</h3>
+        <p>审查系统首先识别输入内容的风险类别。主要识别目标：</p>
+        <p style="text-align:center;">
+          <span class="formula-box">违法犯罪</span>
+          <span class="formula-box">色情内容</span>
+          <span class="formula-box">政治敏感</span>
+          <span class="formula-box">隐私侵犯</span>
+        </p>
+
+        <h3>第二层：风险评估</h3>
+        <p>根据风险类别分配不同权重（Logistic回归OR值）：</p>
+        <table>
+          <tr><th>风险类别</th><th>OR值</th><th>风险类别</th><th>OR值</th></tr>
+          <tr><td>违法犯罪</td><td><strong>13.57</strong></td><td>色情内容</td><td><strong>7.43</strong></td></tr>
+          <tr><td>政治敏感</td><td><strong>6.29</strong></td><td>隐私侵犯</td><td>4.93</td></tr>
+        </table>
+        <img class="viz-img single" src="viz_05_odds_ratio_forest.png" alt="Odds Ratio森林图" style="max-width:85%;">
+        <p class="viz-caption">图9：各风险类别Odds Ratio森林图 —— 违法犯罪(OR=13.57)触发审查概率最高</p>
+
+        <h3>第三层：响应策略</h3>
+        <p>安全审查不只有"拒绝"，还包含：</p>
+        <ul>
+          <li><strong>拒绝回答</strong> —— 直接拒绝（仅1.6%触发）</li>
+          <li><strong>内容删减</strong> —— 移除敏感片段</li>
+          <li><strong>合规改写</strong> —— 转为合法性表述</li>
+        </ul>
+        <p>这解释了为什么拒绝率仅1.6%，而回答语义差异达27%。</p>
+
+        <h3>第四层：决策规则</h3>
+        <p>CART还原的决策逻辑：</p>
+        <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:14px;font-family:monospace;font-size:0.8em;line-height:1.8;text-align:center;">
+          是否违法犯罪？ → 是 → <span style="color:#f88;">触发审查</span><br>
+          &nbsp;&nbsp;↓ 否<br>
+          是否色情内容？ → 是 → <span style="color:#f88;">触发审查</span><br>
+          &nbsp;&nbsp;↓ 否<br>
+          是否政治敏感？ → 是 → <span style="color:#fa8;">触发审查</span><br>
+          &nbsp;&nbsp;↓ 否<br>
+          是否隐私侵犯？ → 是 → <span style="color:#fa8;">触发审查</span><br>
+          &nbsp;&nbsp;↓ 否<br>
+          → <span style="color:#8f8;">不触发审查</span>
+        </div>
+        <img class="viz-img single" src="viz_10_logistic_coefficients.png" alt="Logistic回归系数" style="max-width:80%;margin-top:16px;">
+        <p class="viz-caption">图10：Logistic回归系数 —— 各风险类别对审查触发概率的影响权重</p>
+      `
+    },
+    {
+      id: 'conclusion',
+      label: '八、研究结论',
+      light: 'normal',
+      html: `
+        <h2>八、研究结论</h2>
+        <p>本研究基于1000条安全测试样本，对Qwen3.5-9B及其Uncensored版本进行了对照实验。主要发现：</p>
+
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0;">
+          <p><strong>结论1</strong> —— Qwen安全审查机制真实存在，且显著改变模型行为（McNemar p&lt;0.001）。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0;">
+          <p><strong>结论2</strong> —— 安全审查并非均匀覆盖所有敏感内容，而是具有高度选择性。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0;">
+          <p><strong>结论3</strong> —— 违法犯罪、色情内容、政治敏感和隐私侵犯是最主要的触发类别。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0;">
+          <p><strong>结论4</strong> —— 安全审查不仅通过"拒绝"发挥作用，更通过"改写"和"回答调节"影响模型输出。</p>
+        </div>
+        <div style="background:rgba(40,120,50,0.08);border-left:3px solid rgba(100,200,120,0.5);padding:10px 16px;margin:10px 0;border-radius:0 8px 8px 0;">
+          <p><strong>结论5</strong> —— Qwen安全审查可被表述为一种"风险分类→评估→响应策略→决策规则"的分层审查系统。</p>
+        </div>
+
+        <p style="margin-top:14px;">从算法治理与合规审计视角看，这意味着：<strong>大模型的安全审查并非简单的数据过滤，而是一种基于风险分类的差异化治理机制，其本质更接近"分级管控"而非"全面审查"。</strong></p>
+      `
+    },
+    {
+      id: 'references',
+      label: '九、参考文献',
+      light: 'normal',
+      html: `
+        <h2>九、参考文献</h2>
+        <ol style="font-size:0.8em;line-height:2;">
+          <li>Hengxiang Zhang, Hongfu Gao, Qiang Hu, Guanhua Chen, Lili Yang, Bingyi Jing, Hongxin Wei, Bing Wang, Haifeng Bai, Lei Yang. <em>ChineseSafe: A Chinese Benchmark for Evaluating Safety in Large Language Models</em>[DB/OL]. [2025-4-13]. https://arxiv.org/abs/2410.18491</li>
+          <li>Wajdi Zaghouani, Kholoud K. Aldous, Yicheng Gao. <em>Beyond English and Evasion: A Human-Annotated Multi-Domain Benchmark for High-Stakes LLM Safety Evaluation in Chinese</em>[DB/OL]. [2026-5-28]. https://browse-export.arxiv.org/abs/2605.29667</li>
+          <li>Hao Sun, Zhexin Zhang, Jiawen Deng, Jiale Cheng, Minlie Huang. <em>Safety Assessment of Chinese Large Language Models</em>. arXiv preprint arXiv:2304.10436, 2023.</li>
+          <li>Bai, Y., et al. (2022). <em>Training a Helpful and Harmless Assistant with RLHF</em>. arXiv:2204.05862.</li>
+          <li>Ouyang, L., et al. (2022). <em>Training language models to follow instructions</em>. NeurIPS, 35.</li>
+        </ol>
+      `
+    }
+  ];
+
+  // ================================================================
+  // DOM 引用
+  // ================================================================
+  const body = document.body;
+  const imgLeft = document.getElementById('img-left');
+  const imgRight = document.getElementById('img-right');
+  const splitOverlay = document.getElementById('split-overlay');
+  const splitParticles = document.getElementById('split-particles');
+  const stageContent = document.getElementById('stage-content');
+  const stageBox = document.getElementById('stage-box');
+  const subNav = document.getElementById('sub-nav');
+  const stageNav = document.getElementById('stage-nav');
+  const stageDots = document.getElementById('stage-dots');
+  const tocPanel = document.getElementById('toc-panel');
+  const tocToggle = document.getElementById('toc-toggle');
+
+  let currentStage = 0;
+  let currentSubStage = 0;
+  let currentLightMode = 'normal';
+  let currentCharSet = 'normal'; // 'normal' | 'light'
+  let tocOpen = false;
+
+  const totalStages = STAGES.length;
+
+  // ================================================================
+  // 生成底部圆点 + 目录项
+  // ================================================================
+  STAGES.forEach(function(stage, i) {
+    // 底部圆点
+    const dot = document.createElement('div');
+    dot.className = 'stage-dot';
+    dot.title = stage.label;
+    dot.addEventListener('click', function() { goToStage(i); });
+    stageDots.appendChild(dot);
+
+    // 目录项
+    const item = document.createElement('button');
+    item.className = 'toc-item';
+    item.textContent = stage.label;
+    item.addEventListener('click', function(e) {
+      e.stopPropagation();
+      goToStage(i);
+      closeTOC();
+    });
+    tocPanel.appendChild(item);
+  });
+
+  const allDots = Array.from(stageDots.querySelectorAll('.stage-dot'));
+  const allTocItems = Array.from(tocPanel.querySelectorAll('.toc-item'));
+
+  // ================================================================
+  // 目录展开/收起
+  // ================================================================
+  function toggleTOC() {
+    if (tocOpen) { closeTOC(); }
+    else { openTOC(); }
+  }
+  window.toggleTOC = toggleTOC;
+
+  function openTOC() {
+    tocOpen = true;
+    tocPanel.classList.add('open');
+    tocToggle.textContent = '✕ 目 录';
+  }
+
+  function closeTOC() {
+    tocOpen = false;
+    tocPanel.classList.remove('open');
+    tocToggle.textContent = '☰ 目 录';
+  }
+
+  // 点击页面其他地方关闭目录
+  document.addEventListener('click', function(e) {
+    if (tocOpen && !e.target.closest('#toc-container')) {
+      closeTOC();
+    }
+  });
+
+  // ================================================================
+  // 劈裂转场特效
+  // ================================================================
+  function splitTransition(newGreen, newRed, callback) {
+    const curG = imgLeft.getAttribute('src');
+    const curR = imgRight.getAttribute('src');
+    if (curG === newGreen && curR === newRed) {
+      if (callback) callback();
+      return;
+    }
+
+    // 生成光粒子
+    spawnSplitParticles();
+
+    // 阶段1：裂开
+    splitOverlay.classList.add('active');
+
+    // 阶段2：换图（120ms）
+    setTimeout(function() {
+      imgLeft.setAttribute('src', newGreen);
+      imgRight.setAttribute('src', newRed);
+    }, 120);
+
+    // 阶段3：合拢（280ms）
+    setTimeout(function() {
+      splitOverlay.classList.remove('active');
+      if (callback) callback();
+    }, 280);
+  }
+
+  // 劈裂光粒子生成
+  function spawnSplitParticles() {
+    splitParticles.innerHTML = '';
+    const count = 40;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'split-particle';
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 60 + Math.random() * 200;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      p.style.cssText = `
+        left: ${40 + Math.random() * 20}%;
+        top: ${45 + Math.random() * 10}%;
+        width: ${2 + Math.random() * 5}px;
+        height: ${2 + Math.random() * 5}px;
+        --dx: ${dx}px;
+        --dy: ${dy}px;
+        animation-delay: ${Math.random() * 0.1}s;
+        animation-duration: ${0.4 + Math.random() * 0.4}s;
+      `;
+      splitParticles.appendChild(p);
+    }
+  }
+
+  // ================================================================
+  // 光色模式切换
+  // ================================================================
+  function applyLightMode(mode) {
+    if (mode === currentLightMode) return;
+    const prevMode = currentLightMode;
+    currentLightMode = mode;
+
+    if (mode === 'normal') {
+      body.classList.remove('eye-zoom');
+    } else if (mode === 'dim-eyes') {
+      body.classList.add('eye-zoom');
+    }
+
+    const needLight = (mode === 'dim-eyes');
+    const prevLight = (prevMode === 'dim-eyes');
+    if (needLight !== prevLight) {
+      const newG = needLight ? 'GreenLight.png' : 'Green.png';
+      const newR = needLight ? 'RedLight.png' : 'Red.png';
+      currentCharSet = needLight ? 'light' : 'normal';
+      splitTransition(newG, newR);
+    }
+  }
+
+  // ================================================================
+  // 拆分内容为分节卡片
+  // ================================================================
+  function renderSectionCards(html) {
+    const parts = html.split('<h3>');
+    if (parts.length === 1) {
+      // 无 h3 小节，渲染为单卡片
+      return '<div class="section-card active">' + html + '</div>';
+    }
+    let cards = '';
+    // 第一部分：h2 标题及前置内容（标记为 active）
+    if (parts[0].trim()) {
+      cards += '<div class="section-card active">' + parts[0] + '</div>';
+    }
+    // 后续部分：每个 h3 小节独立卡片（默认隐藏）
+    for (let i = 1; i < parts.length; i++) {
+      cards += '<div class="section-card"><h3>' + parts[i] + '</div>';
+    }
+    return cards;
+  }
+
+  // 渲染子阶段导航圆点
+  function renderSubNav(cardCount) {
+    if (cardCount <= 1) return '';
+    let dots = '';
+    for (let i = 0; i < cardCount; i++) {
+      dots += '<span class="sub-dot' + (i === 0 ? ' current' : '') + '" onclick="goToSubStage(' + i + ')" title="第' + (i + 1) + '节"></span>';
+    }
+    return dots;
+  }
+
+  // 子阶段切换
+  function goToSubStage(idx) {
+    const cards = stageContent.querySelectorAll('.section-card');
+    const dots = subNav.querySelectorAll('.sub-dot');
+    if (idx < 0 || idx >= cards.length || idx === currentSubStage) return;
+    // 切换卡片
+    cards[currentSubStage].classList.remove('active');
+    cards[idx].classList.add('active');
+    // 切换圆点
+    if (dots.length > 0) {
+      dots[currentSubStage].classList.remove('current');
+      dots[idx].classList.add('current');
+    }
+    currentSubStage = idx;
+    // 滚动到顶部
+    document.getElementById('content-area').scrollTop = 0;
+  }
+  window.goToSubStage = goToSubStage;
+
+  // 渲染阶段导航按钮
+  function renderStageNav(idx) {
+    const prevDisabled = idx <= 0 ? 'disabled' : '';
+    const nextDisabled = idx >= totalStages - 1 ? 'disabled' : '';
+    return ''
+      + '<button class="nav-btn" ' + prevDisabled + ' onclick="goToStage(' + (idx - 1) + ')">◂ 上一阶段</button>'
+      + '<span style="font-size:0.8em;color:rgba(160,200,160,0.5);letter-spacing:2px;">' + (idx + 1) + ' / ' + totalStages + '</span>'
+      + '<button class="nav-btn" ' + nextDisabled + ' onclick="goToStage(' + (idx + 1) + ')">下一阶段 ▸</button>';
+  }
+
+  // ================================================================
+  // 阶段跳转
+  // ================================================================
+  function goToStage(idx) {
+    if (idx < 0 || idx >= totalStages || idx === currentStage) return;
+
+    // 更新圆点
+    allDots[currentStage].classList.remove('current');
+    allDots[idx].classList.add('current');
+
+    // 更新目录高亮
+    allTocItems[currentStage].classList.remove('current');
+    allTocItems[idx].classList.add('current');
+
+    currentStage = idx;
+    currentSubStage = 0;
+
+    // 更新内容：拆分为分节卡片
+    stageContent.innerHTML = renderSectionCards(STAGES[idx].html);
+
+    // 更新子阶段导航圆点
+    const cardCount = stageContent.querySelectorAll('.section-card').length;
+    subNav.innerHTML = renderSubNav(cardCount);
+
+    // 更新阶段导航按钮
+    stageNav.innerHTML = renderStageNav(idx);
+
+    // 触发切入动画
+    stageBox.classList.remove('stage-enter');
+    void stageBox.offsetWidth; // reflow
+    stageBox.classList.add('stage-enter');
+
+    // 应用光色模式
+    applyLightMode(STAGES[idx].light);
+
+    // 滚动到顶部
+    document.getElementById('content-area').scrollTop = 0;
+  }
+  window.goToStage = goToStage;
+
+  // 下一阶段（键盘翻页 / 底部导航触发）
+  function nextStage() {
+    if (currentStage < totalStages - 1) {
+      goToStage(currentStage + 1);
+    } else {
+      // 循环回第一页
+      goToStage(0);
+    }
+  }
+  window.nextStage = nextStage;
+
+  // ================================================================
+  // 键盘导航
+  // ================================================================
+  document.addEventListener('keydown', function(e) {
+    const cards = stageContent.querySelectorAll('.section-card');
+    const hasSubCards = cards.length > 1;
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      if (hasSubCards && currentSubStage < cards.length - 1) {
+        goToSubStage(currentSubStage + 1);
+      } else {
+        window.nextStage();
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (hasSubCards && currentSubStage > 0) {
+        goToSubStage(currentSubStage - 1);
+      } else if (currentStage > 0) {
+        goToStage(currentStage - 1);
+      }
+    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); window.nextStage(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); if (currentStage > 0) goToStage(currentStage - 1); }
+    if (e.key === 'Home') { e.preventDefault(); goToStage(0); }
+    if (e.key === 'End')  { e.preventDefault(); goToStage(totalStages - 1); }
+    if (e.key >= '1' && e.key <= '9') {
+      const p = parseInt(e.key) - 1;
+      if (p < totalStages) { e.preventDefault(); goToStage(p); }
+    }
+  });
+
+  // ================================================================
+  // 人物点击 —— 左侧后退，右侧前进
+  // ================================================================
+  document.getElementById('char-left').addEventListener('click', function() {
+    const cards = stageContent.querySelectorAll('.section-card');
+    if (cards.length > 1 && currentSubStage > 0) {
+      goToSubStage(currentSubStage - 1);
+    } else if (currentStage > 0) {
+      goToStage(currentStage - 1);
+    }
+  });
+  document.getElementById('char-right').addEventListener('click', function() {
+    const cards = stageContent.querySelectorAll('.section-card');
+    if (cards.length > 1 && currentSubStage < cards.length - 1) {
+      goToSubStage(currentSubStage + 1);
+    } else {
+      window.nextStage();
+    }
+  });
+
+  // 触摸滑动
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+  document.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const cards = stageContent.querySelectorAll('.section-card');
+    const hasSubCards = cards.length > 1;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) {
+        // 左滑：优先下一子节
+        if (hasSubCards && currentSubStage < cards.length - 1) {
+          goToSubStage(currentSubStage + 1);
+        } else {
+          window.nextStage();
+        }
+      } else {
+        // 右滑：优先上一子节
+        if (hasSubCards && currentSubStage > 0) {
+          goToSubStage(currentSubStage - 1);
+        } else if (currentStage > 0) {
+          goToStage(currentStage - 1);
+        }
+      }
+    }
+  });
+
+  // ================================================================
+  // 光尘粒子系统
+  // ================================================================
+  function initParticles() {
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const MAX_PARTICLES = 55;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+      constructor() {
+        this.reset(true);
+      }
+      reset(initial) {
+        this.x = Math.random() * canvas.width;
+        this.y = initial ? Math.random() * canvas.height : canvas.height + 10;
+        this.size = 0.6 + Math.random() * 2.5;
+        this.speedY = -0.15 - Math.random() * 0.6;
+        this.speedX = (Math.random() - 0.5) * 0.35;
+        this.opacity = 0.15 + Math.random() * 0.55;
+        this.fadeSpeed = 0.002 + Math.random() * 0.005;
+        this.twinkleSpeed = 0.01 + Math.random() * 0.04;
+        this.twinkleOffset = Math.random() * Math.PI * 2;
+        this.hue = 100 + Math.random() * 50; // green-gold range
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        // 边界回绕
+        if (this.y < -10) { this.y = canvas.height + 10; this.x = Math.random() * canvas.width; }
+        if (this.x < -10) this.x = canvas.width + 10;
+        if (this.x > canvas.width + 10) this.x = -10;
+      }
+      draw(ctx, time) {
+        const twinkle = 0.5 + 0.5 * Math.sin(time * this.twinkleSpeed + this.twinkleOffset);
+        const alpha = this.opacity * twinkle;
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+        gradient.addColorStop(0, `hsla(${this.hue}, 70%, 75%, ${alpha})`);
+        gradient.addColorStop(0.5, `hsla(${this.hue}, 60%, 55%, ${alpha * 0.4})`);
+        gradient.addColorStop(1, `hsla(${this.hue}, 50%, 30%, 0)`);
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 初始化粒子
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      particles.push(new Particle());
+    }
+
+    let time = 0;
+    function animate() {
+      time++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach(p => {
+        p.update();
+        p.draw(ctx, time);
+      });
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  // ================================================================
+  // 初始化
+  // ================================================================
+  function init() {
+    initParticles();
+    allDots[0].classList.add('current');
+    allTocItems[0].classList.add('current');
+    stageContent.innerHTML = renderSectionCards(STAGES[0].html);
+    const cardCount = stageContent.querySelectorAll('.section-card').length;
+    subNav.innerHTML = renderSubNav(cardCount);
+    stageNav.innerHTML = renderStageNav(0);
+    currentLightMode = 'normal';
+    currentCharSet = 'normal';
+    applyLightMode('normal');
+
+    // 背景音乐自动播放（处理浏览器策略拦截）
+    const bgm = document.getElementById('bgm');
+    bgm.volume = 0.35;
+    bgm.play().catch(function() {
+      // 被浏览器拦截时，首次用户交互后播放
+      document.addEventListener('click', function resumeBGM() {
+        bgm.play();
+        document.removeEventListener('click', resumeBGM);
+      }, { once: true });
+      document.addEventListener('keydown', function resumeBGM() {
+        bgm.play();
+        document.removeEventListener('keydown', resumeBGM);
+      }, { once: true });
+    });
+
+    console.log('[OK] Qwen安全审查机制研究 —— 共 ' + totalStages + ' 个阶段');
+    console.log('[操作] ← → 翻页子节/阶段 | ↑↓ 切换阶段 | 空格翻页 | 数字键跳转 | 目录导航');
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>

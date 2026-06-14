@@ -1,0 +1,218 @@
+2026-06-14 20:08:33,150 [INFO] Main run_all:37: ======================================================================
+2026-06-14 20:08:33,152 [INFO] Main run_all:38: 安全审查机制分析 —— 全流程启动
+2026-06-14 20:08:33,152 [INFO] Main run_all:39:   输入数据: E:\Cache\project\repos\Safety-Prompts-main\referrance\safety_eval.xlsx
+2026-06-14 20:08:33,152 [INFO] Main run_all:40:   输出目录: E:\Cache\project\repos\Safety-Prompts-main\output
+2026-06-14 20:08:33,152 [INFO] Main run_all:41: ======================================================================
+2026-06-14 20:08:33,152 [INFO] Main run_all:48: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:33,152 [INFO] Main run_all:49: 阶段一: 数据加载与特征工程
+2026-06-14 20:08:33,152 [INFO] Main run_all:50: ██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:33,152 [INFO] 01_load_data load_data:34: 读取数据文件: E:\Cache\project\repos\Safety-Prompts-main\referrance\safety_eval.xlsx
+2026-06-14 20:08:33,542 [INFO] 01_load_data load_data:39: 成功读取 1000 行, 8 列
+2026-06-14 20:08:33,543 [INFO] 01_load_data check_data:54: ==================================================
+2026-06-14 20:08:33,543 [INFO] 01_load_data check_data:55: 开始数据质量检查...
+2026-06-14 20:08:33,543 [INFO] 01_load_data check_data:61:   ✓ 必需列校验通过 (7 列)
+2026-06-14 20:08:33,544 [INFO] 01_load_data check_data:76:   ✓ 无缺失值
+2026-06-14 20:08:33,544 [INFO] 01_load_data check_data:85:   ✓ 无重复值 (按 index)
+2026-06-14 20:08:33,544 [INFO] 01_load_data check_data:93:   总行数: 1000
+2026-06-14 20:08:33,544 [INFO] 01_load_data check_data:94:   subject 类别数: 11
+2026-06-14 20:08:33,546 [INFO] 01_load_data check_data:95:   subject 分布:
+subject
+不违规     487
+淫秽色情     60
+心理健康     59
+财产隐私     59
+违法犯罪     57
+身体伤害     54
+偏见歧视     50
+政治错误     47
+脏话侮辱     45
+变体词      44
+道德伦理     38
+2026-06-14 20:08:33,546 [INFO] 01_load_data check_data:96:   标准模型拒答数: 16
+2026-06-14 20:08:33,546 [INFO] 01_load_data check_data:97:   Uncensored 拒答数: 0
+2026-06-14 20:08:33,546 [INFO] 01_load_data check_data:99: 数据检查完成
+2026-06-14 20:08:33,546 [INFO] Main run_all:54: [01/13] 数据读取与检查完成
+2026-06-14 20:08:33,546 [INFO] 02_build_diff build_diff:27: ==================================================
+2026-06-14 20:08:33,546 [INFO] 02_build_diff build_diff:28: 生成 Diff 变量...
+2026-06-14 20:08:33,546 [INFO] 02_build_diff build_diff:44:   Diff 分布:
+2026-06-14 20:08:33,546 [INFO] 02_build_diff build_diff:45:     Diff = 0 (行为一致): 984 (98.4%)
+2026-06-14 20:08:33,546 [INFO] 02_build_diff build_diff:46:     Diff = 1 (行为不同): 16 (1.6%)
+2026-06-14 20:08:33,552 [INFO] 02_build_diff build_diff:50:   行为交叉表:
+Uncensored拒答  False
+标准模型拒答             
+False           984
+True             16
+2026-06-14 20:08:33,552 [INFO] Main run_all:58: [02/13] Diff 变量生成完成
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:22: ==================================================
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:23: 生成 Risk_Tag 变量...
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:33:   Risk_Tag 分布 (9 类):
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:35:     普通问题: 569 (56.9%)
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:35:     色情内容: 60 (6.0%)
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:35:     心理健康: 59 (5.9%)
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:35:     隐私侵犯: 59 (5.9%)
+2026-06-14 20:08:33,552 [INFO] 03_build_risktag build_risktag:35:     违法犯罪: 57 (5.7%)
+2026-06-14 20:08:33,553 [INFO] 03_build_risktag build_risktag:35:     暴力内容: 54 (5.4%)
+2026-06-14 20:08:33,553 [INFO] 03_build_risktag build_risktag:35:     偏见歧视: 50 (5.0%)
+2026-06-14 20:08:33,553 [INFO] 03_build_risktag build_risktag:35:     政治敏感: 47 (4.7%)
+2026-06-14 20:08:33,553 [INFO] 03_build_risktag build_risktag:35:     仇恨言论: 45 (4.5%)
+2026-06-14 20:08:33,553 [WARNING] 03_build_risktag build_risktag:40:   ⚠ 以下 subject 未命中规则，已标为'普通问题': {'变体词', '道德伦理'}
+2026-06-14 20:08:33,553 [INFO] Main run_all:62: [03/13] Risk Tag 生成完成
+2026-06-14 20:08:33,553 [INFO] Main run_all:69: [04/13] BGE 向量计算已跳过
+2026-06-14 20:08:33,553 [WARNING] Main run_all:76: [05/13] 无向量列，跳过 Similarity
+2026-06-14 20:08:33,553 [WARNING] Main run_all:83: [06/13] 无 Similarity 列，跳过 Divergence
+2026-06-14 20:08:33,553 [INFO] Main run_all:86: 保存特征数据...
+2026-06-14 20:08:33,706 [INFO] Main run_all:89: 特征数据已保存: E:\Cache\project\repos\Safety-Prompts-main\output\data_with_features.xlsx
+2026-06-14 20:08:33,706 [INFO] Main run_all:92: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:33,706 [INFO] Main run_all:93: 阶段二: 统计检验
+2026-06-14 20:08:33,706 [INFO] Main run_all:94: ██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:33,706 [INFO] 07_descriptive descriptive_stats:32: ==================================================
+2026-06-14 20:08:33,707 [INFO] 07_descriptive descriptive_stats:33: 执行描述统计...
+2026-06-14 20:08:33,712 [INFO] 07_descriptive descriptive_stats:63:   Diff组拒答率:
+      标准模型拒答数  Uncensored拒答数  样本数  标准模型拒答率  Uncensored拒答率
+Diff                                                     
+0           0              0  984      0.0            0.0
+1          16              0   16      1.0            0.0
+2026-06-14 20:08:33,716 [INFO] 07_descriptive descriptive_stats:79:   Risk_Tag 行为差异率:
+          样本数  行为差异数    行为差异比例
+Risk_Tag                      
+违法犯罪       57      5  0.087719
+色情内容       60      3  0.050000
+政治敏感       47      2  0.042553
+隐私侵犯       59      2  0.033898
+普通问题      569      4  0.007030
+仇恨言论       45      0  0.000000
+心理健康       59      0  0.000000
+偏见歧视       50      0  0.000000
+暴力内容       54      0  0.000000
+2026-06-14 20:08:33,732 [INFO] 07_descriptive save_results:103:   描述统计已保存: E:\Cache\project\repos\Safety-Prompts-main\output\descriptive_statistics.xlsx
+2026-06-14 20:08:33,878 [INFO] 07_descriptive viz_diff_by_risk:126:   [Viz] 行为差异率柱状图已保存: E:\Cache\project\repos\Safety-Prompts-main\output\viz_01_descriptive_diff_bar.png
+2026-06-14 20:08:33,878 [INFO] Main run_all:97: [07/13] 描述统计完成
+2026-06-14 20:08:33,878 [INFO] 08_mcnemar mcnemar_test_overall:40: ==================================================
+2026-06-14 20:08:33,878 [INFO] 08_mcnemar mcnemar_test_overall:41: McNemar 检验 —— 整体
+2026-06-14 20:08:33,880 [INFO] 08_mcnemar mcnemar_test_overall:52:   配对列联表:
+               Uncensored Yes  Uncensored No
+  标准 Yes             0             16
+  标准 No              0            984
+2026-06-14 20:08:33,880 [INFO] 08_mcnemar mcnemar_test_overall:59:   McNemar χ² (连续性校正) = 14.0625
+2026-06-14 20:08:33,880 [INFO] 08_mcnemar mcnemar_test_overall:60:   p-value = 0.000177
+2026-06-14 20:08:33,880 [INFO] 08_mcnemar mcnemar_test_overall:61:   *** 显著差异
+2026-06-14 20:08:33,880 [INFO] 08_mcnemar mcnemar_test_by_risk:80: ==================================================
+2026-06-14 20:08:33,880 [INFO] 08_mcnemar mcnemar_test_by_risk:81: McNemar 检验 —— 按 Risk_Tag 分层
+2026-06-14 20:08:33,888 [INFO] 08_mcnemar mcnemar_test_by_risk:124: 
+Risk_Tag  样本数  a(都拒答)  b(标准拒答Only)  c(Uncensored拒答Only)  d(都不拒答)  卡方统计量       p值       显著性  行为差异率
+    违法犯罪   57       0            5                    0       52 3.2000 0.073638       不显著 0.0877
+    普通问题  569       0            4                    0      565 2.2500 0.133614       不显著 0.0070
+    色情内容   60       0            3                    0       57 1.3333 0.248213       不显著 0.0500
+    政治敏感   47       0            2                    0       45 0.5000 0.479500       不显著 0.0426
+    隐私侵犯   59       0            2                    0       57 0.5000 0.479500       不显著 0.0339
+    仇恨言论   45       0            0                    0       45    NaN      NaN 无差异对,无法检验 0.0000
+    偏见歧视   50       0            0                    0       50    NaN      NaN 无差异对,无法检验 0.0000
+    心理健康   59       0            0                    0       59    NaN      NaN 无差异对,无法检验 0.0000
+    暴力内容   54       0            0                    0       54    NaN      NaN 无差异对,无法检验 0.0000
+2026-06-14 20:08:33,898 [INFO] 08_mcnemar save_results:134:   McNemar 结果已保存: E:\Cache\project\repos\Safety-Prompts-main\output\mcnemar_result.xlsx
+2026-06-14 20:08:34,004 [INFO] 08_mcnemar viz_mcnemar_stratified:177:   [Viz] McNemar 分层图已保存: E:\Cache\project\repos\Safety-Prompts-main\output\viz_04_mcnemar_stratified.png
+2026-06-14 20:08:34,004 [INFO] Main run_all:100: [08/13] McNemar 检验完成
+2026-06-14 20:08:34,004 [INFO] 09_odds_ratio odds_ratio_analysis:38: ==================================================
+2026-06-14 20:08:34,004 [INFO] 09_odds_ratio odds_ratio_analysis:39: Odds Ratio 分析...
+2026-06-14 20:08:34,008 [INFO] 09_odds_ratio odds_ratio_analysis:101:   参照组: 普通问题 (N=569, Diff1=4, Diff0=565)
+2026-06-14 20:08:34,009 [INFO] 09_odds_ratio odds_ratio_analysis:102:   OR 结果:
+Risk_Tag  样本数  Diff=1(行为不同)  Diff=0(行为一致)  行为差异率  Odds_Ratio  CI_95_Lower  CI_95_Upper
+    违法犯罪   57             5            52 0.0877     13.5817       3.5381      52.1364
+    色情内容   60             3            57 0.0500      7.4342       1.6234      34.0438
+    政治敏感   47             2            45 0.0426      6.2778       1.1193      35.2111
+    隐私侵犯   59             2            57 0.0339      4.9561       0.8883      27.6535
+    心理健康   59             0            59 0.0000      0.0000          NaN          NaN
+    暴力内容   54             0            54 0.0000      0.0000          NaN          NaN
+    偏见歧视   50             0            50 0.0000      0.0000          NaN          NaN
+    仇恨言论   45             0            45 0.0000      0.0000          NaN          NaN
+2026-06-14 20:08:34,017 [INFO] 09_odds_ratio save_results:111:   Odds Ratio 结果已保存: E:\Cache\project\repos\Safety-Prompts-main\output\odds_ratio_result.xlsx
+2026-06-14 20:08:34,242 [INFO] 09_odds_ratio viz_odds_ratio_forest:164:   [Viz] OR 森林图已保存: E:\Cache\project\repos\Safety-Prompts-main\output\viz_05_odds_ratio_forest.png
+2026-06-14 20:08:34,242 [INFO] Main run_all:103: [09/13] Odds Ratio 分析完成
+2026-06-14 20:08:34,242 [INFO] 10_risk_heatmap build_heat_matrices:30: ==================================================
+2026-06-14 20:08:34,242 [INFO] 10_risk_heatmap build_heat_matrices:31: 构建风险热度矩阵...
+2026-06-14 20:08:34,258 [INFO] 10_risk_heatmap build_heat_matrices:49:   RiskTag × Diff 矩阵:
+          行为一致(Diff=0)  行为不同(Diff=1)    合计  行为差异率
+Risk_Tag                                         
+仇恨言论                45             0    45    0.0
+偏见歧视                50             0    50    0.0
+心理健康                59             0    59    0.0
+政治敏感                45             2    47    4.3
+普通问题               565             4   569    0.7
+暴力内容                54             0    54    0.0
+色情内容                57             3    60    5.0
+违法犯罪                52             5    57    8.8
+隐私侵犯                57             2    59    3.4
+合计                 984            16  1000    1.6
+2026-06-14 20:08:34,295 [INFO] 10_risk_heatmap build_heat_matrices:96:   风险热力指数:
+          样本数  行为差异数  标准拒答数  Uncensored拒答数  行为差异率  标准拒答率  Uncensored拒答率  热度指数
+Risk_Tag                                                                     
+违法犯罪       57      5      5              0    8.8    8.8            0.0   7.0
+色情内容       60      3      3              0    5.0    5.0            0.0   4.0
+政治敏感       47      2      2              0    4.3    4.3            0.0   3.4
+隐私侵犯       59      2      2              0    3.4    3.4            0.0   2.7
+普通问题      569      4      4              0    0.7    0.7            0.0   0.6
+仇恨言论       45      0      0              0    0.0    0.0            0.0   0.0
+心理健康       59      0      0              0    0.0    0.0            0.0   0.0
+偏见歧视       50      0      0              0    0.0    0.0            0.0   0.0
+暴力内容       54      0      0              0    0.0    0.0            0.0   0.0
+2026-06-14 20:08:34,315 [INFO] 10_risk_heatmap save_results:106:   风险热度矩阵已保存: E:\Cache\project\repos\Safety-Prompts-main\output\risk_heat_matrix.xlsx
+2026-06-14 20:08:34,517 [INFO] 10_risk_heatmap viz_risk_heatmap:128:   [Viz] 风险热度热力图已保存: E:\Cache\project\repos\Safety-Prompts-main\output\viz_06_risk_heatmap.png
+2026-06-14 20:08:34,637 [INFO] 10_risk_heatmap viz_hot_index_bar:150:   [Viz] 热度指数柱状图已保存: E:\Cache\project\repos\Safety-Prompts-main\output\viz_07_risk_hot_index_bar.png
+2026-06-14 20:08:34,637 [INFO] Main run_all:106: [10/13] 风险热度矩阵完成
+2026-06-14 20:08:34,639 [INFO] Main run_all:109: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:34,639 [INFO] Main run_all:110: 阶段三: 高级分析
+2026-06-14 20:08:34,639 [INFO] Main run_all:111: ██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:34,639 [WARNING] Main run_all:117: [11/13] 无 Divergence 列，跳过
+2026-06-14 20:08:34,639 [WARNING] Main run_all:123: [12/13] 无 Similarity 列，跳过 Logistic
+2026-06-14 20:08:34,639 [INFO] 13_cart prepare_data:45: ==================================================
+2026-06-14 20:08:34,639 [INFO] 13_cart prepare_data:46: CART 决策树 —— 数据准备...
+2026-06-14 20:08:34,640 [INFO] 13_cart prepare_data:75:   特征维度: (1000, 9), 标签分布: Diff=0: 984, Diff=1: 16
+2026-06-14 20:08:34,640 [INFO] 13_cart prepare_data:76:   特征列表(9): ['risk_仇恨言论', 'risk_偏见歧视', 'risk_心理健康', 'risk_政治敏感', 'risk_普通问题', 'risk_暴力内容', 'risk_色情内容', 'risk_违法犯罪', 'risk_隐私侵犯']...
+2026-06-14 20:08:34,640 [INFO] 13_cart train_decision_tree:83: ==================================================
+2026-06-14 20:08:34,640 [INFO] 13_cart train_decision_tree:84: 训练 CART 决策树...
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:101:   训练准确率: 0.7850
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:102:   树节点数: 11
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:103:   最大深度: 5
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:104:   叶子数: 6
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:109:   Top 10 特征重要性:
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:112:     risk_违法犯罪: 0.3456
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:112:     risk_色情内容: 0.2085
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:112:     risk_隐私侵犯: 0.1859
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:112:     risk_政治敏感: 0.1651
+2026-06-14 20:08:34,642 [INFO] 13_cart train_decision_tree:112:     risk_普通问题: 0.0948
+2026-06-14 20:08:34,643 [INFO] 13_cart plot_decision_tree:144: 绘制决策树...
+2026-06-14 20:08:35,054 [INFO] 13_cart plot_decision_tree:161:   决策树图已保存: E:\Cache\project\repos\Safety-Prompts-main\output\decision_tree.png
+2026-06-14 20:08:35,065 [INFO] 13_cart save_results:181:   CART 特征重要性已保存: E:\Cache\project\repos\Safety-Prompts-main\output\feature_importance.xlsx
+2026-06-14 20:08:35,065 [INFO] 13_cart save_results:186:   决策规则已保存: E:\Cache\project\repos\Safety-Prompts-main\output\tree_rules.txt
+2026-06-14 20:08:35,065 [INFO] Main run_all:126: [13/13] CART 决策树完成
+2026-06-14 20:08:35,065 [INFO] Main run_all:130: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:35,065 [INFO] Main run_all:131: 全流程完成! 总耗时: 0.0 分钟
+2026-06-14 20:08:35,065 [INFO] Main run_all:132: 所有输出文件位于: E:\Cache\project\repos\Safety-Prompts-main\output
+2026-06-14 20:08:35,065 [INFO] Main run_all:133: ██████████████████████████████████████████████████████████████████████
+2026-06-14 20:08:35,065 [INFO] Main run_all:135: 
+生成的文件列表:
+2026-06-14 20:08:35,065 [INFO] Main run_all:139:   OK data_with_features: data_with_features.xlsx (236.1 KB)
+2026-06-14 20:08:35,065 [INFO] Main run_all:139:   OK descriptive_statistics: descriptive_statistics.xlsx (7.0 KB)
+2026-06-14 20:08:35,065 [INFO] Main run_all:139:   OK mcnemar_result: mcnemar_result.xlsx (6.3 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK odds_ratio_result: odds_ratio_result.xlsx (5.4 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK risk_heat_matrix: risk_heat_matrix.xlsx (9.0 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK divergence_statistics: divergence_statistics.xlsx (6.1 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK logistic_result: logistic_result.xlsx (7.2 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK feature_importance: feature_importance.xlsx (6.5 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK decision_tree_png: decision_tree.png (239.5 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK tree_rules_txt: tree_rules.txt (1.0 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK bge_embeddings: bge_embeddings.npz (7435.1 KB)
+2026-06-14 20:08:35,066 [INFO] Main run_all:139:   OK viz_descriptive_diff: viz_01_descriptive_diff_bar.png (59.5 KB)
+2026-06-14 20:08:35,067 [INFO] Main run_all:141:   -- viz_descriptive_sim: 未生成
+2026-06-14 20:08:35,067 [INFO] Main run_all:141:   -- viz_descriptive_box: 未生成
+2026-06-14 20:08:35,067 [INFO] Main run_all:139:   OK viz_mcnemar_stratified: viz_04_mcnemar_stratified.png (52.2 KB)
+2026-06-14 20:08:35,067 [INFO] Main run_all:139:   OK viz_odds_ratio_forest: viz_05_odds_ratio_forest.png (48.8 KB)
+2026-06-14 20:08:35,067 [INFO] Main run_all:139:   OK viz_risk_heatmap: viz_06_risk_heatmap.png (56.2 KB)
+2026-06-14 20:08:35,067 [INFO] Main run_all:139:   OK viz_risk_hot_index: viz_07_risk_hot_index_bar.png (54.6 KB)
+2026-06-14 20:08:35,068 [INFO] Main run_all:141:   -- viz_divergence_diff: 未生成
+2026-06-14 20:08:35,068 [INFO] Main run_all:141:   -- viz_divergence_risk: 未生成
+2026-06-14 20:08:35,068 [INFO] Main run_all:141:   -- viz_logistic_coef: 未生成

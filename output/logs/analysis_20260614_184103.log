@@ -1,0 +1,95 @@
+2026-06-14 18:41:11,510 [INFO] Main run_all:37: ======================================================================
+2026-06-14 18:41:11,510 [INFO] Main run_all:38: 安全审查机制分析 —— 全流程启动
+2026-06-14 18:41:11,510 [INFO] Main run_all:39:   输入数据: E:\Cache\project\repos\Safety-Prompts-main\referrance\safety_eval.xlsx
+2026-06-14 18:41:11,510 [INFO] Main run_all:40:   输出目录: E:\Cache\project\repos\Safety-Prompts-main\output
+2026-06-14 18:41:11,510 [INFO] Main run_all:41: ======================================================================
+2026-06-14 18:41:11,510 [INFO] Main run_all:48: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 18:41:11,512 [INFO] Main run_all:49: 阶段一: 数据加载与特征工程
+2026-06-14 18:41:11,512 [INFO] Main run_all:50: ██████████████████████████████████████████████████████████████████████
+2026-06-14 18:41:11,512 [INFO] 01_load_data load_data:34: 读取数据文件: E:\Cache\project\repos\Safety-Prompts-main\referrance\safety_eval.xlsx
+2026-06-14 18:41:11,825 [INFO] 01_load_data load_data:39: 成功读取 1000 行, 8 列
+2026-06-14 18:41:11,828 [INFO] 01_load_data check_data:54: ==================================================
+2026-06-14 18:41:11,828 [INFO] 01_load_data check_data:55: 开始数据质量检查...
+2026-06-14 18:41:11,828 [INFO] 01_load_data check_data:61:   ✓ 必需列校验通过 (7 列)
+2026-06-14 18:41:11,829 [INFO] 01_load_data check_data:76:   ✓ 无缺失值
+2026-06-14 18:41:11,829 [INFO] 01_load_data check_data:85:   ✓ 无重复值 (按 index)
+2026-06-14 18:41:11,829 [INFO] 01_load_data check_data:93:   总行数: 1000
+2026-06-14 18:41:11,829 [INFO] 01_load_data check_data:94:   subject 类别数: 11
+2026-06-14 18:41:11,830 [INFO] 01_load_data check_data:95:   subject 分布:
+subject
+不违规     487
+淫秽色情     60
+心理健康     59
+财产隐私     59
+违法犯罪     57
+身体伤害     54
+偏见歧视     50
+政治错误     47
+脏话侮辱     45
+变体词      44
+道德伦理     38
+2026-06-14 18:41:11,830 [INFO] 01_load_data check_data:96:   标准模型拒答数: 16
+2026-06-14 18:41:11,830 [INFO] 01_load_data check_data:97:   Uncensored 拒答数: 0
+2026-06-14 18:41:11,830 [INFO] 01_load_data check_data:99: 数据检查完成
+2026-06-14 18:41:11,830 [INFO] Main run_all:54: [01/13] 数据读取与检查完成
+2026-06-14 18:41:11,830 [INFO] 02_build_diff build_diff:27: ==================================================
+2026-06-14 18:41:11,830 [INFO] 02_build_diff build_diff:28: 生成 Diff 变量...
+2026-06-14 18:41:11,831 [INFO] 02_build_diff build_diff:44:   Diff 分布:
+2026-06-14 18:41:11,831 [INFO] 02_build_diff build_diff:45:     Diff = 0 (行为一致): 984 (98.4%)
+2026-06-14 18:41:11,831 [INFO] 02_build_diff build_diff:46:     Diff = 1 (行为不同): 16 (1.6%)
+2026-06-14 18:41:11,840 [INFO] 02_build_diff build_diff:50:   行为交叉表:
+Uncensored拒答  False
+标准模型拒答             
+False           984
+True             16
+2026-06-14 18:41:11,840 [INFO] Main run_all:58: [02/13] Diff 变量生成完成
+2026-06-14 18:41:11,840 [INFO] 03_build_risktag build_risktag:22: ==================================================
+2026-06-14 18:41:11,840 [INFO] 03_build_risktag build_risktag:23: 生成 Risk_Tag 变量...
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:33:   Risk_Tag 分布 (9 类):
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     普通问题: 569 (56.9%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     色情内容: 60 (6.0%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     心理健康: 59 (5.9%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     隐私侵犯: 59 (5.9%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     违法犯罪: 57 (5.7%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     暴力内容: 54 (5.4%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     偏见歧视: 50 (5.0%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     政治敏感: 47 (4.7%)
+2026-06-14 18:41:11,841 [INFO] 03_build_risktag build_risktag:35:     仇恨言论: 45 (4.5%)
+2026-06-14 18:41:11,841 [WARNING] 03_build_risktag build_risktag:40:   ⚠ 以下 subject 未命中规则，已标为'普通问题': {'变体词', '道德伦理'}
+2026-06-14 18:41:11,841 [INFO] Main run_all:62: [03/13] Risk Tag 生成完成
+2026-06-14 18:41:11,841 [INFO] Main run_all:69: [04/13] BGE 向量计算已跳过
+2026-06-14 18:41:11,841 [WARNING] Main run_all:76: [05/13] 无向量列，跳过 Similarity
+2026-06-14 18:41:11,841 [WARNING] Main run_all:83: [06/13] 无 Similarity 列，跳过 Divergence
+2026-06-14 18:41:11,841 [INFO] Main run_all:86: 保存特征数据...
+2026-06-14 18:41:11,979 [INFO] Main run_all:89: 特征数据已保存: E:\Cache\project\repos\Safety-Prompts-main\output\data_with_features.xlsx
+2026-06-14 18:41:11,979 [INFO] Main run_all:92: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 18:41:11,979 [INFO] Main run_all:93: 阶段二: 统计检验
+2026-06-14 18:41:11,979 [INFO] Main run_all:94: ██████████████████████████████████████████████████████████████████████
+2026-06-14 18:41:11,979 [INFO] 07_descriptive descriptive_stats:30: ==================================================
+2026-06-14 18:41:11,979 [INFO] 07_descriptive descriptive_stats:31: 执行描述统计...
+2026-06-14 18:41:11,980 [ERROR] Main run_all:144: 流程中断: Cannot describe a DataFrame without columns
+Traceback (most recent call last):
+  File "E:\Cache\project\repos\Safety-Prompts-main\referrance\script\main.py", line 96, in run_all
+    mod07.run(df)
+  File "E:\Cache\project\repos\Safety-Prompts-main\referrance\script\07_descriptive.py", line 104, in run
+    results = descriptive_stats(df)
+  File "E:\Cache\project\repos\Safety-Prompts-main\referrance\script\07_descriptive.py", line 47, in descriptive_stats
+    group_diff = df.groupby(COL_DIFF)[num_cols_present].describe(percentiles=[0.25, 0.5, 0.75])
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\groupby\groupby.py", line 3603, in describe
+    result = self._python_apply_general(
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\groupby\groupby.py", line 1887, in _python_apply_general
+    values, mutated = self._grouper.apply_groupwise(f, data, self.axis)
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\groupby\ops.py", line 928, in apply_groupwise
+    res = f(group)
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\groupby\groupby.py", line 3604, in <lambda>
+    lambda x: x.describe(
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\generic.py", line 12041, in describe
+    return describe_ndframe(
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\methods\describe.py", line 91, in describe_ndframe
+    describer = DataFrameDescriber(
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\methods\describe.py", line 162, in __init__
+    raise ValueError("Cannot describe a DataFrame without columns")
+ValueError: Cannot describe a DataFrame without columns
+2026-06-14 18:41:12,109 [INFO] Main run_all:150: 中断前数据已保存至: E:\Cache\project\repos\Safety-Prompts-main\output\data_interim.xlsx

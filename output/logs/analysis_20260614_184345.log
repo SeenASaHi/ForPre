@@ -1,0 +1,268 @@
+2026-06-14 18:43:47,328 [INFO] Main run_all:37: ======================================================================
+2026-06-14 18:43:47,329 [INFO] Main run_all:38: 安全审查机制分析 —— 全流程启动
+2026-06-14 18:43:47,329 [INFO] Main run_all:39:   输入数据: E:\Cache\project\repos\Safety-Prompts-main\referrance\safety_eval.xlsx
+2026-06-14 18:43:47,329 [INFO] Main run_all:40:   输出目录: E:\Cache\project\repos\Safety-Prompts-main\output
+2026-06-14 18:43:47,329 [INFO] Main run_all:41: ======================================================================
+2026-06-14 18:43:47,329 [INFO] Main run_all:48: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 18:43:47,330 [INFO] Main run_all:49: 阶段一: 数据加载与特征工程
+2026-06-14 18:43:47,330 [INFO] Main run_all:50: ██████████████████████████████████████████████████████████████████████
+2026-06-14 18:43:47,330 [INFO] 01_load_data load_data:34: 读取数据文件: E:\Cache\project\repos\Safety-Prompts-main\referrance\safety_eval.xlsx
+2026-06-14 18:43:47,681 [INFO] 01_load_data load_data:39: 成功读取 1000 行, 8 列
+2026-06-14 18:43:47,681 [INFO] 01_load_data check_data:54: ==================================================
+2026-06-14 18:43:47,682 [INFO] 01_load_data check_data:55: 开始数据质量检查...
+2026-06-14 18:43:47,682 [INFO] 01_load_data check_data:61:   ✓ 必需列校验通过 (7 列)
+2026-06-14 18:43:47,683 [INFO] 01_load_data check_data:76:   ✓ 无缺失值
+2026-06-14 18:43:47,683 [INFO] 01_load_data check_data:85:   ✓ 无重复值 (按 index)
+2026-06-14 18:43:47,683 [INFO] 01_load_data check_data:93:   总行数: 1000
+2026-06-14 18:43:47,684 [INFO] 01_load_data check_data:94:   subject 类别数: 11
+2026-06-14 18:43:47,684 [INFO] 01_load_data check_data:95:   subject 分布:
+subject
+不违规     487
+淫秽色情     60
+心理健康     59
+财产隐私     59
+违法犯罪     57
+身体伤害     54
+偏见歧视     50
+政治错误     47
+脏话侮辱     45
+变体词      44
+道德伦理     38
+2026-06-14 18:43:47,684 [INFO] 01_load_data check_data:96:   标准模型拒答数: 16
+2026-06-14 18:43:47,685 [INFO] 01_load_data check_data:97:   Uncensored 拒答数: 0
+2026-06-14 18:43:47,685 [INFO] 01_load_data check_data:99: 数据检查完成
+2026-06-14 18:43:47,685 [INFO] Main run_all:54: [01/13] 数据读取与检查完成
+2026-06-14 18:43:47,685 [INFO] 02_build_diff build_diff:27: ==================================================
+2026-06-14 18:43:47,685 [INFO] 02_build_diff build_diff:28: 生成 Diff 变量...
+2026-06-14 18:43:47,685 [INFO] 02_build_diff build_diff:44:   Diff 分布:
+2026-06-14 18:43:47,685 [INFO] 02_build_diff build_diff:45:     Diff = 0 (行为一致): 984 (98.4%)
+2026-06-14 18:43:47,685 [INFO] 02_build_diff build_diff:46:     Diff = 1 (行为不同): 16 (1.6%)
+2026-06-14 18:43:47,690 [INFO] 02_build_diff build_diff:50:   行为交叉表:
+Uncensored拒答  False
+标准模型拒答             
+False           984
+True             16
+2026-06-14 18:43:47,690 [INFO] Main run_all:58: [02/13] Diff 变量生成完成
+2026-06-14 18:43:47,690 [INFO] 03_build_risktag build_risktag:22: ==================================================
+2026-06-14 18:43:47,690 [INFO] 03_build_risktag build_risktag:23: 生成 Risk_Tag 变量...
+2026-06-14 18:43:47,691 [INFO] 03_build_risktag build_risktag:33:   Risk_Tag 分布 (9 类):
+2026-06-14 18:43:47,691 [INFO] 03_build_risktag build_risktag:35:     普通问题: 569 (56.9%)
+2026-06-14 18:43:47,691 [INFO] 03_build_risktag build_risktag:35:     色情内容: 60 (6.0%)
+2026-06-14 18:43:47,691 [INFO] 03_build_risktag build_risktag:35:     心理健康: 59 (5.9%)
+2026-06-14 18:43:47,691 [INFO] 03_build_risktag build_risktag:35:     隐私侵犯: 59 (5.9%)
+2026-06-14 18:43:47,692 [INFO] 03_build_risktag build_risktag:35:     违法犯罪: 57 (5.7%)
+2026-06-14 18:43:47,692 [INFO] 03_build_risktag build_risktag:35:     暴力内容: 54 (5.4%)
+2026-06-14 18:43:47,692 [INFO] 03_build_risktag build_risktag:35:     偏见歧视: 50 (5.0%)
+2026-06-14 18:43:47,692 [INFO] 03_build_risktag build_risktag:35:     政治敏感: 47 (4.7%)
+2026-06-14 18:43:47,692 [INFO] 03_build_risktag build_risktag:35:     仇恨言论: 45 (4.5%)
+2026-06-14 18:43:47,692 [WARNING] 03_build_risktag build_risktag:40:   ⚠ 以下 subject 未命中规则，已标为'普通问题': {'道德伦理', '变体词'}
+2026-06-14 18:43:47,692 [INFO] Main run_all:62: [03/13] Risk Tag 生成完成
+2026-06-14 18:43:47,692 [INFO] 04_bge_embedding compute_embeddings:86: ==================================================
+2026-06-14 18:43:47,692 [INFO] 04_bge_embedding compute_embeddings:87: BGE 向量计算...
+2026-06-14 18:43:47,692 [INFO] 04_bge_embedding check_ollama_embedding_model:63: 检查 Ollama 嵌入模型可用性...
+2026-06-14 18:43:49,768 [INFO] 04_bge_embedding check_ollama_embedding_model:73:   ✓ 嵌入模型已就绪: znbang/bge:large-zh-v1.5-q4_k_m
+2026-06-14 18:47:30,055 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 50/1000 (5.0%) | 速率: 0.2条/s | 预估剩余: 69.8分
+2026-06-14 18:51:10,459 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 100/1000 (10.0%) | 速率: 0.2条/s | 预估剩余: 66.1分
+2026-06-14 18:54:50,717 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 150/1000 (15.0%) | 速率: 0.2条/s | 预估剩余: 62.4分
+2026-06-14 18:58:31,311 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 200/1000 (20.0%) | 速率: 0.2条/s | 预估剩余: 58.8分
+2026-06-14 19:02:11,298 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 250/1000 (25.0%) | 速率: 0.2条/s | 预估剩余: 55.1分
+2026-06-14 19:05:52,363 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 300/1000 (30.0%) | 速率: 0.2条/s | 预估剩余: 51.4分
+2026-06-14 19:09:35,858 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 350/1000 (35.0%) | 速率: 0.2条/s | 预估剩余: 47.9分
+2026-06-14 19:13:23,543 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 400/1000 (40.0%) | 速率: 0.2条/s | 预估剩余: 44.3分
+2026-06-14 19:17:06,432 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 450/1000 (45.0%) | 速率: 0.2条/s | 预估剩余: 40.7分
+2026-06-14 19:20:52,630 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 500/1000 (50.0%) | 速率: 0.2条/s | 预估剩余: 37.0分
+2026-06-14 19:24:37,394 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 550/1000 (55.0%) | 速率: 0.2条/s | 预估剩余: 33.4分
+2026-06-14 19:28:25,261 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 600/1000 (60.0%) | 速率: 0.2条/s | 预估剩余: 29.7分
+2026-06-14 19:32:13,468 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 650/1000 (65.0%) | 速率: 0.2条/s | 预估剩余: 26.1分
+2026-06-14 19:36:01,672 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 700/1000 (70.0%) | 速率: 0.2条/s | 预估剩余: 22.4分
+2026-06-14 19:39:49,318 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 750/1000 (75.0%) | 速率: 0.2条/s | 预估剩余: 18.7分
+2026-06-14 19:43:36,884 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 800/1000 (80.0%) | 速率: 0.2条/s | 预估剩余: 14.9分
+2026-06-14 19:47:24,779 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 850/1000 (85.0%) | 速率: 0.2条/s | 预估剩余: 11.2分
+2026-06-14 19:51:09,070 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 900/1000 (90.0%) | 速率: 0.2条/s | 预估剩余: 7.5分
+2026-06-14 19:54:51,026 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 950/1000 (95.0%) | 速率: 0.2条/s | 预估剩余: 3.7分
+2026-06-14 19:58:37,692 [INFO] 04_bge_embedding compute_embeddings:122:   进度: 1000/1000 (100.0%) | 速率: 0.2条/s | 预估剩余: 0.0分
+2026-06-14 19:58:38,065 [INFO] 04_bge_embedding compute_embeddings:138:   向量已保存至: E:\Cache\project\repos\Safety-Prompts-main\output\bge_embeddings.npz (std: (1000, 1024), unc: (1000, 1024))
+2026-06-14 19:58:38,066 [INFO] 04_bge_embedding compute_embeddings:141:   BGE 向量计算完成 | 耗时: 74.8分
+2026-06-14 19:58:38,066 [INFO] 04_bge_embedding compute_embeddings:142:   标准模型: 成功 1000, 失败 0
+2026-06-14 19:58:38,066 [INFO] 04_bge_embedding compute_embeddings:143:   Uncensored: 成功 1000, 失败 0
+2026-06-14 19:58:38,067 [INFO] Main run_all:67: [04/13] BGE 向量计算完成
+2026-06-14 19:58:38,067 [INFO] 05_similarity compute_similarity:41: ==================================================
+2026-06-14 19:58:38,068 [INFO] 05_similarity compute_similarity:42: 计算 Similarity (余弦相似度)...
+2026-06-14 19:58:38,120 [INFO] 05_similarity compute_similarity:58:   有效样本: 1000, 缺失: 0
+2026-06-14 19:58:38,121 [INFO] 05_similarity compute_similarity:60:   Similarity 均值:   0.7326
+2026-06-14 19:58:38,121 [INFO] 05_similarity compute_similarity:61:   Similarity 中位数: 0.7336
+2026-06-14 19:58:38,122 [INFO] 05_similarity compute_similarity:62:   Similarity 标准差: 0.1034
+2026-06-14 19:58:38,122 [INFO] 05_similarity compute_similarity:63:   Similarity 最小值: 0.4301
+2026-06-14 19:58:38,122 [INFO] 05_similarity compute_similarity:64:   Similarity 最大值: 0.9896
+2026-06-14 19:58:38,122 [INFO] Main run_all:74: [05/13] Similarity 计算完成
+2026-06-14 19:58:38,122 [INFO] 06_divergence compute_divergence:21: ==================================================
+2026-06-14 19:58:38,122 [INFO] 06_divergence compute_divergence:22: 计算 Divergence (1 - Similarity)...
+2026-06-14 19:58:38,125 [INFO] 06_divergence compute_divergence:30:   Divergence 均值:   0.2674
+2026-06-14 19:58:38,126 [INFO] 06_divergence compute_divergence:31:   Divergence 中位数: 0.2664
+2026-06-14 19:58:38,126 [INFO] 06_divergence compute_divergence:32:   Divergence 标准差: 0.1034
+2026-06-14 19:58:38,126 [INFO] 06_divergence compute_divergence:33:   Divergence 最小值: 0.0104
+2026-06-14 19:58:38,126 [INFO] 06_divergence compute_divergence:34:   Divergence 最大值: 0.5699
+2026-06-14 19:58:38,126 [INFO] Main run_all:81: [06/13] Divergence 计算完成
+2026-06-14 19:58:38,126 [INFO] Main run_all:86: 保存特征数据...
+2026-06-14 19:58:38,403 [INFO] Main run_all:89: 特征数据已保存: E:\Cache\project\repos\Safety-Prompts-main\output\data_with_features.xlsx
+2026-06-14 19:58:38,403 [INFO] Main run_all:92: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 19:58:38,404 [INFO] Main run_all:93: 阶段二: 统计检验
+2026-06-14 19:58:38,404 [INFO] Main run_all:94: ██████████████████████████████████████████████████████████████████████
+2026-06-14 19:58:38,404 [INFO] 07_descriptive descriptive_stats:30: ==================================================
+2026-06-14 19:58:38,404 [INFO] 07_descriptive descriptive_stats:31: 执行描述统计...
+2026-06-14 19:58:38,416 [INFO] 07_descriptive descriptive_stats:43:   全样本描述统计:
+           Similarity   Divergence
+count     1000.000000  1000.000000
+mean         0.732602     0.267398
+std          0.103449     0.103449
+min          0.430144     0.010356
+25%          0.663740     0.195329
+50%          0.733570     0.266430
+75%          0.804671     0.336260
+max          0.989644     0.569856
+skew        -0.167418     0.167418
+kurtosis    -0.315136    -0.315136
+2026-06-14 19:58:38,436 [INFO] 07_descriptive descriptive_stats:50:   按 Diff 分组:
+     Similarity                                                                       Divergence                                                                      
+          count      mean       std       min       25%       50%       75%       max      count      mean       std       min       25%       50%       75%       max
+Diff                                                                                                                                                                  
+0         984.0  0.734272  0.102708  0.430144  0.666437  0.735414  0.805272  0.989644      984.0  0.265728  0.102708  0.010356  0.194728  0.264586  0.333563  0.569856
+1          16.0  0.629906  0.099992  0.441021  0.563127  0.613328  0.693684  0.822371       16.0  0.370094  0.099992  0.177629  0.306316  0.386672  0.436873  0.558979
+2026-06-14 19:58:38,444 [INFO] 07_descriptive descriptive_stats:61:   Diff组拒答率:
+      标准模型拒答数  Uncensored拒答数  样本数  标准模型拒答率  Uncensored拒答率
+Diff                                                     
+0           0              0  984      0.0            0.0
+1          16              0   16      1.0            0.0
+2026-06-14 19:58:38,452 [INFO] 07_descriptive descriptive_stats:77:   Risk_Tag 行为差异率:
+          样本数  行为差异数    行为差异比例
+Risk_Tag                      
+违法犯罪       57      5  0.087719
+色情内容       60      3  0.050000
+政治敏感       47      2  0.042553
+隐私侵犯       59      2  0.033898
+普通问题      569      4  0.007030
+仇恨言论       45      0  0.000000
+心理健康       59      0  0.000000
+偏见歧视       50      0  0.000000
+暴力内容       54      0  0.000000
+2026-06-14 19:58:38,493 [INFO] 07_descriptive save_results:102:   描述统计已保存: E:\Cache\project\repos\Safety-Prompts-main\output\descriptive_statistics.xlsx
+2026-06-14 19:58:38,493 [INFO] Main run_all:97: [07/13] 描述统计完成
+2026-06-14 19:58:38,493 [INFO] 08_mcnemar mcnemar_test_overall:39: ==================================================
+2026-06-14 19:58:38,493 [INFO] 08_mcnemar mcnemar_test_overall:40: McNemar 检验 —— 整体
+2026-06-14 19:58:38,494 [INFO] 08_mcnemar mcnemar_test_overall:51:   配对列联表:
+               Uncensored Yes  Uncensored No
+  标准 Yes             0             16
+  标准 No              0            984
+2026-06-14 19:58:38,495 [INFO] 08_mcnemar mcnemar_test_overall:58:   McNemar χ² (连续性校正) = 14.0625
+2026-06-14 19:58:38,495 [INFO] 08_mcnemar mcnemar_test_overall:59:   p-value = 0.000177
+2026-06-14 19:58:38,495 [INFO] 08_mcnemar mcnemar_test_overall:60:   *** 显著差异
+2026-06-14 19:58:38,495 [INFO] 08_mcnemar mcnemar_test_by_risk:79: ==================================================
+2026-06-14 19:58:38,495 [INFO] 08_mcnemar mcnemar_test_by_risk:80: McNemar 检验 —— 按 Risk_Tag 分层
+2026-06-14 19:58:38,502 [INFO] 08_mcnemar mcnemar_test_by_risk:123: 
+Risk_Tag  样本数  a(都拒答)  b(标准拒答Only)  c(Uncensored拒答Only)  d(都不拒答)  卡方统计量       p值       显著性  行为差异率
+    违法犯罪   57       0            5                    0       52 3.2000 0.073638       不显著 0.0877
+    普通问题  569       0            4                    0      565 2.2500 0.133614       不显著 0.0070
+    色情内容   60       0            3                    0       57 1.3333 0.248213       不显著 0.0500
+    政治敏感   47       0            2                    0       45 0.5000 0.479500       不显著 0.0426
+    隐私侵犯   59       0            2                    0       57 0.5000 0.479500       不显著 0.0339
+    仇恨言论   45       0            0                    0       45    NaN      NaN 无差异对,无法检验 0.0000
+    偏见歧视   50       0            0                    0       50    NaN      NaN 无差异对,无法检验 0.0000
+    心理健康   59       0            0                    0       59    NaN      NaN 无差异对,无法检验 0.0000
+    暴力内容   54       0            0                    0       54    NaN      NaN 无差异对,无法检验 0.0000
+2026-06-14 19:58:38,515 [INFO] 08_mcnemar save_results:133:   McNemar 结果已保存: E:\Cache\project\repos\Safety-Prompts-main\output\mcnemar_result.xlsx
+2026-06-14 19:58:38,515 [INFO] Main run_all:100: [08/13] McNemar 检验完成
+2026-06-14 19:58:38,515 [INFO] 09_odds_ratio odds_ratio_analysis:37: ==================================================
+2026-06-14 19:58:38,516 [INFO] 09_odds_ratio odds_ratio_analysis:38: Odds Ratio 分析...
+2026-06-14 19:58:38,524 [INFO] 09_odds_ratio odds_ratio_analysis:100:   参照组: 普通问题 (N=569, Diff1=4, Diff0=565)
+2026-06-14 19:58:38,526 [INFO] 09_odds_ratio odds_ratio_analysis:101:   OR 结果:
+Risk_Tag  样本数  Diff=1(行为不同)  Diff=0(行为一致)  行为差异率  Odds_Ratio  CI_95_Lower  CI_95_Upper
+    违法犯罪   57             5            52 0.0877     13.5817       3.5381      52.1364
+    色情内容   60             3            57 0.0500      7.4342       1.6234      34.0438
+    政治敏感   47             2            45 0.0426      6.2778       1.1193      35.2111
+    隐私侵犯   59             2            57 0.0339      4.9561       0.8883      27.6535
+    心理健康   59             0            59 0.0000      0.0000          NaN          NaN
+    暴力内容   54             0            54 0.0000      0.0000          NaN          NaN
+    偏见歧视   50             0            50 0.0000      0.0000          NaN          NaN
+    仇恨言论   45             0            45 0.0000      0.0000          NaN          NaN
+2026-06-14 19:58:38,537 [INFO] 09_odds_ratio save_results:110:   Odds Ratio 结果已保存: E:\Cache\project\repos\Safety-Prompts-main\output\odds_ratio_result.xlsx
+2026-06-14 19:58:38,537 [INFO] Main run_all:103: [09/13] Odds Ratio 分析完成
+2026-06-14 19:58:38,537 [INFO] 10_risk_heatmap build_heat_matrices:28: ==================================================
+2026-06-14 19:58:38,537 [INFO] 10_risk_heatmap build_heat_matrices:29: 构建风险热度矩阵...
+2026-06-14 19:58:38,559 [INFO] 10_risk_heatmap build_heat_matrices:47:   RiskTag × Diff 矩阵:
+          行为一致(Diff=0)  行为不同(Diff=1)    合计  行为差异率
+Risk_Tag                                         
+仇恨言论                45             0    45    0.0
+偏见歧视                50             0    50    0.0
+心理健康                59             0    59    0.0
+政治敏感                45             2    47    4.3
+普通问题               565             4   569    0.7
+暴力内容                54             0    54    0.0
+色情内容                57             3    60    5.0
+违法犯罪                52             5    57    8.8
+隐私侵犯                57             2    59    3.4
+合计                 984            16  1000    1.6
+2026-06-14 19:58:38,607 [INFO] 10_risk_heatmap build_heat_matrices:94:   风险热力指数:
+          样本数  行为差异数  标准拒答数  Uncensored拒答数  行为差异率  标准拒答率  Uncensored拒答率  热度指数
+Risk_Tag                                                                     
+违法犯罪       57      5      5              0    8.8    8.8            0.0   7.0
+色情内容       60      3      3              0    5.0    5.0            0.0   4.0
+政治敏感       47      2      2              0    4.3    4.3            0.0   3.4
+隐私侵犯       59      2      2              0    3.4    3.4            0.0   2.7
+普通问题      569      4      4              0    0.7    0.7            0.0   0.6
+仇恨言论       45      0      0              0    0.0    0.0            0.0   0.0
+心理健康       59      0      0              0    0.0    0.0            0.0   0.0
+偏见歧视       50      0      0              0    0.0    0.0            0.0   0.0
+暴力内容       54      0      0              0    0.0    0.0            0.0   0.0
+2026-06-14 19:58:38,632 [INFO] 10_risk_heatmap save_results:104:   风险热度矩阵已保存: E:\Cache\project\repos\Safety-Prompts-main\output\risk_heat_matrix.xlsx
+2026-06-14 19:58:38,632 [INFO] Main run_all:106: [10/13] 风险热度矩阵完成
+2026-06-14 19:58:38,632 [INFO] Main run_all:109: 
+██████████████████████████████████████████████████████████████████████
+2026-06-14 19:58:38,632 [INFO] Main run_all:110: 阶段三: 高级分析
+2026-06-14 19:58:38,632 [INFO] Main run_all:111: ██████████████████████████████████████████████████████████████████████
+2026-06-14 19:58:38,632 [INFO] 11_divergence_analysis analyze_divergence_by_diff:32: ==================================================
+2026-06-14 19:58:38,632 [INFO] 11_divergence_analysis analyze_divergence_by_diff:33: Divergence 按 Diff 分组分析...
+2026-06-14 19:58:38,635 [INFO] 11_divergence_analysis analyze_divergence_by_diff:41:   Diff=0 (行为一致): N=984, Mean=0.2657, Median=0.2646, Std=0.1027
+2026-06-14 19:58:38,635 [INFO] 11_divergence_analysis analyze_divergence_by_diff:43:   Diff=1 (行为不同): N=16, Mean=0.3701, Median=0.3867, Std=0.1000
+2026-06-14 19:58:38,639 [INFO] 11_divergence_analysis analyze_divergence_by_diff:48:   Mann-Whitney U 检验: U=3608.00, p=0.000199
+2026-06-14 19:58:38,639 [INFO] 11_divergence_analysis analyze_divergence_by_diff:49:   *** 有显著差异
+2026-06-14 19:58:38,639 [INFO] 11_divergence_analysis analyze_divergence_by_risktag:69: ==================================================
+2026-06-14 19:58:38,639 [INFO] 11_divergence_analysis analyze_divergence_by_risktag:70: Divergence 按 Risk_Tag 分组分析...
+2026-06-14 19:58:38,651 [INFO] 11_divergence_analysis analyze_divergence_by_risktag:97:   Kruskal-Wallis H 检验: H=84.71, p=0.000000
+2026-06-14 19:58:38,651 [INFO] 11_divergence_analysis analyze_divergence_by_risktag:98:   *** 各组间存在显著差异
+2026-06-14 19:58:38,652 [INFO] 11_divergence_analysis analyze_divergence_by_risktag:105: 
+Risk_Tag   N   Mean  Median    Std    Min    Max
+    政治敏感  47 0.3337  0.3539 0.1042 0.0465 0.5298
+    违法犯罪  57 0.3244  0.3218 0.1167 0.0451 0.5590
+    色情内容  60 0.2914  0.2996 0.1025 0.0417 0.5068
+    普通问题 569 0.2715  0.2752 0.0978 0.0287 0.5699
+    隐私侵犯  59 0.2668  0.2748 0.1107 0.0709 0.5053
+    偏见歧视  50 0.2222  0.2165 0.0899 0.0718 0.5321
+    心理健康  59 0.2203  0.2105 0.0953 0.0214 0.4017
+    仇恨言论  45 0.2192  0.2101 0.0692 0.1037 0.4634
+    暴力内容  54 0.2143  0.2182 0.1068 0.0104 0.4277
+2026-06-14 19:58:38,669 [INFO] 11_divergence_analysis save_results:115:   Divergence 统计已保存: E:\Cache\project\repos\Safety-Prompts-main\output\divergence_statistics.xlsx
+2026-06-14 19:58:38,669 [INFO] Main run_all:115: [11/13] Divergence 统计分析完成
+2026-06-14 19:58:38,670 [INFO] 12_logistic prepare_data:35: ==================================================
+2026-06-14 19:58:38,670 [INFO] 12_logistic prepare_data:36: Logistic 回归 —— 数据准备...
+2026-06-14 19:58:38,673 [INFO] 12_logistic prepare_data:53:   Risk_Tag 类别: ['普通问题', '仇恨言论', '偏见歧视', '心理健康', '政治敏感', '暴力内容', '色情内容', '违法犯罪', '隐私侵犯']
+2026-06-14 19:58:38,673 [INFO] 12_logistic prepare_data:54:   有效样本: 1000
+2026-06-14 19:58:38,673 [INFO] 12_logistic run_logistic:63: ==================================================
+2026-06-14 19:58:38,673 [INFO] 12_logistic run_logistic:64: 拟合 Logistic 回归模型...
+2026-06-14 19:58:38,795 [INFO] 12_logistic run_logistic:79:   Pseudo R²: 0.1982
+2026-06-14 19:58:38,795 [INFO] 12_logistic run_logistic:80:   Log-Likelihood: -65.77
+2026-06-14 19:58:38,795 [INFO] 12_logistic run_logistic:81:   AIC: 151.54
+2026-06-14 19:58:38,795 [INFO] 12_logistic run_logistic:82:   BIC: 200.62
+2026-06-14 19:58:38,796 [ERROR] Main run_all:144: 流程中断: 'LogitResults' object has no attribute 'zvalues'
+Traceback (most recent call last):
+  File "E:\Cache\project\repos\Safety-Prompts-main\referrance\script\main.py", line 120, in run_all
+    mod12.run(df)
+  File "E:\Cache\project\repos\Safety-Prompts-main\referrance\script\12_logistic.py", line 142, in run
+    coef_df, result, summary_text = run_logistic(data)
+  File "E:\Cache\project\repos\Safety-Prompts-main\referrance\script\12_logistic.py", line 89, in run_logistic
+    "z值": result.zvalues.values.round(4),
+  File "C:\Users\HazeSeas\AppData\Local\Programs\Python\Python39\lib\site-packages\statsmodels\base\wrapper.py", line 34, in __getattribute__
+    obj = getattr(results, attr)
+AttributeError: 'LogitResults' object has no attribute 'zvalues'
+2026-06-14 19:58:39,093 [INFO] Main run_all:150: 中断前数据已保存至: E:\Cache\project\repos\Safety-Prompts-main\output\data_interim.xlsx
